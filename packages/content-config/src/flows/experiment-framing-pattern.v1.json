@@ -1,0 +1,45 @@
+{
+  "flowId": "experiment-framing-pattern",
+  "version": 1,
+  "type": "experiment",
+  "title": "Headline fork",
+  "track": "Foundation",
+  "teaser": "Read a short headline and pick the follow-up that feels right. A structural template for later experiments — not the finished Framing scenario.",
+  "initial": "headline",
+  "steps": {
+    "headline": {
+      "type": "BRANCH",
+      "prompt": "A clip is spreading fast. What do you want to do first?",
+      "options": [
+        {
+          "label": "Share it so people see what's happening",
+          "value": "amplify",
+          "next": "measure_amplify"
+        },
+        {
+          "label": "Pause and check who made it",
+          "value": "verify",
+          "next": "measure_verify"
+        }
+      ]
+    },
+    "measure_amplify": {
+      "type": "MEASURE",
+      "prompt": "Continue.",
+      "metric": "framing",
+      "weight": 1,
+      "next": "done"
+    },
+    "measure_verify": {
+      "type": "MEASURE",
+      "prompt": "Continue.",
+      "metric": "framing",
+      "weight": 0,
+      "next": "done"
+    },
+    "done": {
+      "type": "STOP",
+      "prompt": "That's the end of this short run."
+    }
+  }
+}

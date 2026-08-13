@@ -1,0 +1,38 @@
+# dependencies
+node_modules
+.pnpm-store
+
+# next.js
+.next
+out
+
+# build
+dist
+build
+*.tsbuildinfo
+
+# env
+.env
+.env*.local
+
+# debug / IDE
+.DS_Store
+*.log
+.idea
+.vscode
+
+# testing
+coverage
+
+# generated crisis JSON for Serwist precache (copied from content-config)
+apps/web/public/content
+
+# Playwright
+apps/web/test-results
+apps/web/playwright-report
+apps/web/blob-report
+apps/web/playwright/.cache
+
+#files
+cursor-rules.md
+IsItFR.mdc

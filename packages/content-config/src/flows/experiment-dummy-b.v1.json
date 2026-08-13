@@ -1,0 +1,22 @@
+{
+  "flowId": "experiment-dummy-b",
+  "version": 1,
+  "type": "experiment",
+  "title": "Dummy experiment B",
+  "track": "Foundation",
+  "teaser": "Another placeholder scenario for the train dashboard.",
+  "initial": "probe",
+  "steps": {
+    "probe": {
+      "type": "MEASURE",
+      "prompt": "Dummy probe B — not real experiment content.",
+      "metric": "stub_signal_b",
+      "weight": 1,
+      "next": "done"
+    },
+    "done": {
+      "type": "STOP",
+      "prompt": "Dummy B complete."
+    }
+  }
+}

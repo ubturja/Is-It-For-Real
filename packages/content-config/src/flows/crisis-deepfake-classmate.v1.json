@@ -1,0 +1,66 @@
+{
+  "flowId": "crisis-deepfake-classmate",
+  "version": 1,
+  "type": "crisis",
+  "title": "Help with a classmate deepfake",
+  "initial": "stop",
+  "steps": {
+    "stop": {
+      "type": "STOP",
+      "prompt": "Pause before you react, reply, or share anything.",
+      "why": "Quick reactions and resharing can spread the content further and make it harder to contain.",
+      "next": "preserve"
+    },
+    "preserve": {
+      "type": "PRESERVE",
+      "prompt": "Save what you can see before it disappears — screenshots, links, usernames, and when you first noticed it.",
+      "why": "A clear record helps whoever you tell understand what happened without needing to hunt for it later.",
+      "next": "choose_contact"
+    },
+    "choose_contact": {
+      "type": "BRANCH",
+      "prompt": "Choose who to tell. Pick the option that feels safest right now.",
+      "why": "You do not have to handle this alone. One clear next step is enough.",
+      "options": [
+        {
+          "label": "A trusted adult",
+          "value": "trusted_adult",
+          "next": "template_trusted_adult"
+        },
+        {
+          "label": "A school contact",
+          "value": "school_contact",
+          "next": "template_school_contact"
+        },
+        {
+          "label": "Report it on the platform",
+          "value": "platform_report",
+          "next": "template_platform_report"
+        }
+      ]
+    },
+    "template_trusted_adult": {
+      "type": "TEMPLATE",
+      "prompt": "Use this message as a starting point. Edit it so it sounds like you before you send it.",
+      "templateKey": "crisis-deepfake-classmate-trusted-adult",
+      "next": "resources"
+    },
+    "template_school_contact": {
+      "type": "TEMPLATE",
+      "prompt": "Use this message as a starting point. Edit it so it sounds like you before you send it.",
+      "templateKey": "crisis-deepfake-classmate-school-contact",
+      "next": "resources"
+    },
+    "template_platform_report": {
+      "type": "TEMPLATE",
+      "prompt": "Use these notes when you file the platform report. Adjust details so they match what you saw.",
+      "templateKey": "crisis-deepfake-classmate-platform-report",
+      "next": "resources"
+    },
+    "resources": {
+      "type": "RESOURCES",
+      "prompt": "You've taken important steps. When you're ready, these organizations can help with removal, reporting, or talking to someone.",
+      "resourceSet": "crisis-deepfake-classmate"
+    }
+  }
+}

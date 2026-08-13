@@ -1,0 +1,6 @@
+{
+  "key": "crisis-deepfake-classmate-school-contact",
+  "locale": "en",
+  "title": "Message to a school contact",
+  "body": "Hello [school contact's name / role],\n\nI am writing to report a harmful deepfake or non-consensual image/video involving a student, [classmate's name]. I first noticed it on [platform / where you saw it] around [date or time].\n\nI have preserved evidence (screenshots, links, usernames) and have not shared the content further. Please advise on the school's next steps and how to protect [classmate's name] from further harm.\n\nThank you,\n[your name]\n[your grade / class, if helpful]"
+}

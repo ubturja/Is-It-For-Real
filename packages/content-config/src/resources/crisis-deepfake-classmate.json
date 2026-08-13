@@ -1,0 +1,37 @@
+{
+  "key": "crisis-deepfake-classmate",
+  "title": "You're not alone — help is available",
+  "description": "These are real organizations that help with non-consensual images, deepfakes, and the stress that comes with them. Choose what fits your situation; you do not have to do everything at once.",
+  "resources": [
+    {
+      "id": "take-it-down",
+      "title": "Take It Down (NCMEC)",
+      "description": "Free NCMEC service to help stop the online sharing of nude or sexually explicit images taken when someone was under 18. You can stay anonymous and do not upload the images.",
+      "url": "https://takeitdown.ncmec.org/"
+    },
+    {
+      "id": "cybertipline",
+      "title": "NCMEC CyberTipline",
+      "description": "Report suspected online child sexual exploitation — including harmful images of minors — to the U.S. National Center for Missing & Exploited Children.",
+      "url": "https://report.cybertip.org/"
+    },
+    {
+      "id": "stopncii",
+      "title": "StopNCII.org",
+      "description": "Free tool (operated with the Revenge Porn Helpline) for adults 18+ to create on-device hashes of intimate images so participating platforms can help detect and remove them — including deepfakes.",
+      "url": "https://stopncii.org/"
+    },
+    {
+      "id": "revenge-porn-helpline",
+      "title": "Revenge Porn Helpline",
+      "description": "UK support service for adults (18+) affected by intimate image abuse, including advice on reporting and content removal.",
+      "url": "https://revengepornhelpline.org.uk/"
+    },
+    {
+      "id": "crisis-text-line",
+      "title": "Crisis Text Line",
+      "description": "Free, 24/7 emotional support in the U.S. Text HOME to 741741, or visit the site for other ways to reach a trained crisis counselor.",
+      "url": "https://www.crisistextline.org/"
+    }
+  ]
+}

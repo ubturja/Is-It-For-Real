@@ -1,0 +1,22 @@
+{
+  "flowId": "experiment-stub",
+  "version": 1,
+  "type": "experiment",
+  "title": "Experiment stub",
+  "track": "Foundation",
+  "teaser": "A short interactive scenario. Jump in without knowing what is measured.",
+  "initial": "probe",
+  "steps": {
+    "probe": {
+      "type": "MEASURE",
+      "prompt": "Stub probe — not real experiment content.",
+      "metric": "stub_signal",
+      "weight": 1,
+      "next": "done"
+    },
+    "done": {
+      "type": "STOP",
+      "prompt": "Stub complete."
+    }
+  }
+}
