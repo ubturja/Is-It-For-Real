@@ -6,6 +6,10 @@ on:
   pull_request:
   workflow_dispatch:
 
+permissions:
+  contents: read
+  checks: write
+
 jobs:
   check:
     runs-on: ubuntu-latest
@@ -69,7 +73,16 @@ jobs:
         run: pnpm --filter web exec playwright install --with-deps chromium
 
       - name: Axe + keyboard Crisis Mode
+        id: a11y_tests
         run: pnpm --filter web test:e2e:a11y
+
+      - name: Publish a11y counts check
+        if: ${{ !cancelled() }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          CHECK_NAME: a11y counts
+          CHECK_CONCLUSION: ${{ steps.a11y_tests.outcome == 'success' && 'success' || 'failure' }}
+        run: node apps/web/scripts/publish-github-check-summary.mjs
 
       - name: Upload Playwright report
         if: ${{ !cancelled() }}
@@ -129,7 +142,16 @@ jobs:
         run: pnpm --filter web exec playwright install --with-deps chromium
 
       - name: Playwright journeys
+        id: e2e_tests
         run: pnpm --filter web test:e2e
+
+      - name: Publish e2e counts check
+        if: ${{ !cancelled() }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          CHECK_NAME: e2e counts
+          CHECK_CONCLUSION: ${{ steps.e2e_tests.outcome == 'success' && 'success' || 'failure' }}
+        run: node apps/web/scripts/publish-github-check-summary.mjs
 
       - name: Upload Playwright report
         if: ${{ !cancelled() }}
