@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 
+import { StepTypeHeader } from "./StepTypeHeader";
 import type { StepComponentProps } from "./types";
 
 export function ResourcesStep({ step, onAdvance }: StepComponentProps) {
@@ -30,17 +31,16 @@ export function ResourcesStep({ step, onAdvance }: StepComponentProps) {
 
   return (
     <div className="mx-auto flex max-w-xl flex-col gap-6">
-      <header className="space-y-2 text-center sm:text-left">
+      <StepTypeHeader
+        type="RESOURCES"
+        title={resourceSet?.title ?? chrome.stepTypes.RESOURCES.titleFallback}
+        description={resourceSet?.description ?? step.prompt}
+        layout="plain"
+      >
         <p className="text-muted-foreground text-xs font-medium tracking-[0.12em] uppercase">
           {chrome.stepTypes.RESOURCES.eyebrow}
         </p>
-        <h2 className="font-heading text-2xl font-medium tracking-tight text-balance">
-          {resourceSet?.title ?? chrome.stepTypes.RESOURCES.titleFallback}
-        </h2>
-        <p className="text-muted-foreground text-sm text-pretty">
-          {resourceSet?.description ?? step.prompt}
-        </p>
-      </header>
+      </StepTypeHeader>
 
       {resourceSet ? (
         <ul className="flex list-none flex-col gap-3 p-0">

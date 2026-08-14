@@ -6,8 +6,10 @@ import {
   expectBranchStep,
   expectPreserveStep,
   expectResourcesStep,
+  expectStaticTrustedAdultTemplate,
   expectStopStep,
   clickContinue,
+  goToTrustedAdultTemplate,
   waitForPersistedStep,
   waitForServiceWorkerControl,
 } from "./helpers/crisis";
@@ -55,6 +57,46 @@ test.describe("Crisis Mode /help", () => {
 
     await completeTrustedAdultFlow(page);
     await expectResourcesStep(page);
+  });
+
+  test("offline template step renders the static fallback instantly", async ({
+    page,
+    context,
+  }) => {
+    await page.goto("/help");
+    await expectStopStep(page);
+    await waitForServiceWorkerControl(page);
+
+    await context.setOffline(true);
+    await page.reload({ waitUntil: "domcontentloaded" });
+
+    await goToTrustedAdultTemplate(page);
+
+    const started = Date.now();
+    await expectStaticTrustedAdultTemplate(page);
+    expect(Date.now() - started).toBeLessThan(1_500);
+  });
+
+  test("online personalize replaces the static template body", async ({
+    page,
+  }) => {
+    await page.route("**/api/crisis/personalize-template", async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({
+          title: "Message to a trusted adult",
+          body: "Hi Alex, I need your help with something that happened.",
+        }),
+      });
+    });
+
+    await page.goto("/help");
+    await goToTrustedAdultTemplate(page);
+    await expect(
+      page.getByText("Hi Alex, I need your help with something that happened."),
+    ).toBeVisible();
+    await expect(page.getByText("[classmate's name]")).toHaveCount(0);
   });
 
   test("reload after steps 1–2 resumes at branch (step 3)", async ({

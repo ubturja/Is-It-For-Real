@@ -1,0 +1,8 @@
+[
+  {
+    "metric": "framing_bias",
+    "aggregation": "last",
+    "normalizeToRange": [0, 1],
+    "description": "One path-selected observation; scale the recorded weight onto 0–1."
+  }
+]

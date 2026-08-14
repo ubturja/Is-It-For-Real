@@ -1,0 +1,8 @@
+[
+  {
+    "metric": "deepfake_resilience",
+    "aggregation": "average",
+    "normalizeToRange": [0, 1],
+    "description": "Mean of the branch-diamond observations, then scale onto 0–1."
+  }
+]

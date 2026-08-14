@@ -17,7 +17,9 @@ test.describe("Auth boundary", () => {
     const url = new URL(page.url());
     expect(url.pathname).toBe("/login");
     expect(url.searchParams.get(LOGIN_NEXT_PARAM)).toBe("/train");
-    await expect(page.getByRole("heading", { name: "Sign in" })).toBeVisible();
+    const signInTitle = page.getByRole("heading", { name: "Sign in" });
+    await expect(signInTitle).toBeVisible();
+    await expect(signInTitle).toHaveAttribute("data-slot", "card-title");
   });
 
   test("unauthenticated GET /train/[experimentId] redirects to /login with next", async ({
@@ -29,7 +31,9 @@ test.describe("Auth boundary", () => {
     const url = new URL(page.url());
     expect(url.pathname).toBe("/login");
     expect(url.searchParams.get(LOGIN_NEXT_PARAM)).toBe(experimentPath);
-    await expect(page.getByRole("heading", { name: "Sign in" })).toBeVisible();
+    const signInTitle = page.getByRole("heading", { name: "Sign in" });
+    await expect(signInTitle).toBeVisible();
+    await expect(signInTitle).toHaveAttribute("data-slot", "card-title");
   });
 
   test("real login upserts a profiles row for the authenticated user_id", async ({
@@ -56,7 +60,7 @@ test.describe("Auth boundary", () => {
     await page.getByLabel("Password").fill(password);
     await page.getByRole("button", { name: "Sign in" }).click();
 
-    const loginError = page.getByRole("alert");
+    const loginError = page.locator("p[role='alert']");
     const tokenResponse = await Promise.race([
       tokenResponsePromise,
       loginError.waitFor({ state: "visible" }).then(async () => {
@@ -87,6 +91,10 @@ test.describe("Auth boundary", () => {
       .select("user_id")
       .eq("user_id", grant.user.id)
       .single();
+
+    console.log(
+      `profiles query: error=${profileError?.message ?? "null"} row=${JSON.stringify(profile)} expected_user_id=${grant.user.id}`,
+    );
 
     expect(profileError).toBeNull();
     expect(profile?.user_id).toBe(grant.user.id);

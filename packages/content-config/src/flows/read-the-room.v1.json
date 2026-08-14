@@ -1,0 +1,95 @@
+{
+  "flowId": "read-the-room",
+  "version": 1,
+  "type": "experiment",
+  "title": "The group chat",
+  "track": "Read the Room",
+  "teaser": "A year-group chat lights up over a clip of someone you know. What do you send?",
+  "skin": "chat-bubble",
+  "initial": "pause",
+  "steps": {
+    "pause": {
+      "type": "STOP",
+      "prompt": "The year-group chat is scrolling fast. Someone dropped a link and wrote that it's a video of Jordan from class 'saying things Jordan would never say.' This run never shows that clip — only the chat around it. Don't reply or forward yet.",
+      "why": "A quick reply or a forward can spread a fake further than the original post. Pausing keeps you from becoming part of the chain.",
+      "next": "save_thread"
+    },
+    "save_thread": {
+      "type": "PRESERVE",
+      "prompt": "Screenshot the thread: who posted, the caption, the timestamp. Don't download the file itself.",
+      "why": "A record of the chat is enough for whoever you tell. Saving the media can copy it onto your device.",
+      "next": "first_reply"
+    },
+    "first_reply": {
+      "type": "BRANCH",
+      "prompt": "The next three messages are 'send it here' and laughing emojis. What do you do in the thread?",
+      "options": [
+        {
+          "label": "Forward the link to another group so more people 'know what's going on'",
+          "value": "forward",
+          "next": "measure_forward"
+        },
+        {
+          "label": "Ask the group not to share it and to check where the clip came from",
+          "value": "verify",
+          "next": "measure_verify"
+        }
+      ]
+    },
+    "measure_forward": {
+      "type": "MEASURE",
+      "prompt": "Continue.",
+      "metric": "deepfake_resilience",
+      "weight": 0,
+      "next": "who"
+    },
+    "measure_verify": {
+      "type": "MEASURE",
+      "prompt": "Continue.",
+      "metric": "deepfake_resilience",
+      "weight": 1,
+      "next": "who"
+    },
+    "who": {
+      "type": "BRANCH",
+      "prompt": "Jordan isn't in this chat. Who else needs to hear about this?",
+      "options": [
+        {
+          "label": "Message a trusted adult with what you saved from the thread",
+          "value": "adult",
+          "next": "measure_adult"
+        },
+        {
+          "label": "Keep it in the group — fire back at the poster and leave it there",
+          "value": "group_only",
+          "next": "measure_group_only"
+        }
+      ]
+    },
+    "measure_adult": {
+      "type": "MEASURE",
+      "prompt": "Continue.",
+      "metric": "deepfake_resilience",
+      "weight": 1,
+      "next": "template_group"
+    },
+    "measure_group_only": {
+      "type": "MEASURE",
+      "prompt": "Continue.",
+      "metric": "deepfake_resilience",
+      "weight": 0,
+      "next": "template_group"
+    },
+    "template_group": {
+      "type": "TEMPLATE",
+      "prompt": "If you send anything in the thread, start from this. Edit it so it sounds like you. Don't attach the clip.",
+      "templateKey": "read-the-room-group-pause",
+      "next": "resources"
+    },
+    "resources": {
+      "type": "RESOURCES",
+      "prompt": "You've taken a next step. These organizations can help with reporting, removal, or talking to someone.",
+      "resourceSet": "crisis-deepfake-classmate"
+    }
+  }
+}

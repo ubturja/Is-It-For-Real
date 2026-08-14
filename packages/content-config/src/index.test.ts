@@ -7,7 +7,7 @@ import { compileFlowToMachine } from "@isitfr/engine";
 import { validateFlowConfig } from "@isitfr/schemas";
 import { interpret } from "xstate";
 
-import { getFlow, getMessageTemplate, getResources, getStepChrome, listExperiments, listFlows } from "./index";
+import { getFeed, getFlow, getMessageTemplate, getProfileChrome, getReportChrome, getResources, getStepChrome, listExperiments, listFlows } from "./index";
 
 const FLOWS_DIR = join(dirname(fileURLToPath(import.meta.url)), "flows");
 const FLOW_FILENAME_RE = /\.v.+\.json$/;
@@ -136,6 +136,218 @@ describe("getFlow", () => {
     service.stop();
   });
 
+  it("framing-headlines: article-compare BRANCH routes by variant to framing_bias MEASURE", () => {
+    const config = getFlow("framing-headlines");
+    expect(config.type).toBe("experiment");
+    expect(config.track).toBe("Framing");
+    expect(config.steps.compare).toMatchObject({
+      type: "BRANCH",
+      payload: expect.objectContaining({ kind: "article-compare" }),
+    });
+
+    const payload = config.steps.compare.payload;
+    expect(payload).toMatchObject({
+      kind: "article-compare",
+      variants: expect.arrayContaining([
+        expect.objectContaining({
+          id: "neutral",
+          headline: expect.stringContaining("Westbridge council votes"),
+        }),
+        expect.objectContaining({
+          id: "emotional",
+          headline: expect.stringContaining("Sunday storytime gone"),
+        }),
+        expect.objectContaining({
+          id: "political",
+          headline: expect.stringContaining("Council majority steamrolls"),
+        }),
+      ]),
+      actions: expect.arrayContaining([
+        expect.objectContaining({ value: "trust" }),
+        expect.objectContaining({ value: "share" }),
+      ]),
+    });
+    expect(
+      Array.isArray(payload?.variants) ? payload.variants.length : 0,
+    ).toBe(3);
+
+    expect(config.steps.measure_neutral).toMatchObject({
+      type: "MEASURE",
+      metric: "framing_bias",
+      weight: 0,
+      next: "done",
+    });
+    expect(config.steps.measure_emotional).toMatchObject({
+      type: "MEASURE",
+      metric: "framing_bias",
+      weight: 1,
+      next: "done",
+    });
+    expect(config.steps.measure_political).toMatchObject({
+      type: "MEASURE",
+      metric: "framing_bias",
+      weight: 2,
+      next: "done",
+    });
+
+    const service = interpret(compileFlowToMachine(config)).start();
+    expect(service.state.value).toBe("compare");
+    service.send("emotional_share");
+    expect(service.state.value).toBe("measure_emotional");
+    expect(service.state.context.answers).toEqual({});
+    service.send("NEXT");
+    expect(service.state.value).toBe("done");
+    expect(service.state.context.measurements).toEqual([
+      { metric: "framing_bias", value: 1 },
+    ]);
+    expect(service.state.done).toBe(true);
+    service.stop();
+  });
+
+  it("echo-chamber MEASURE records client-supplied perspective_diversity", () => {
+    const config = getFlow("echo-chamber");
+    const service = interpret(compileFlowToMachine(config)).start();
+    expect(service.state.value).toBe("perspective_diversity");
+    service.send({ type: "NEXT", value: 0.25 });
+    expect(service.state.value).toBe("done");
+    expect(service.state.context.measurements).toEqual([
+      { metric: "perspective_diversity", value: 0.25 },
+    ]);
+    expect(service.state.done).toBe(true);
+    service.stop();
+  });
+
+  it("memory-recall: accurate vs misleading BRANCH arms record different memory_reliability weights", () => {
+    const config = getFlow("memory-recall");
+    expect(config.type).toBe("experiment");
+    expect(config.track).toBe("Memory");
+    expect(config.steps.watch?.payload).toMatchObject({
+      kind: "video-display",
+    });
+    expect(config.steps.wait?.payload).toMatchObject({
+      kind: "delay",
+      durationMs: 8000,
+    });
+    expect(
+      (config.steps.wait?.payload?.durationMs as number | undefined) ?? 0,
+    ).toBeGreaterThan(1000);
+
+    const accurate = interpret(compileFlowToMachine(config)).start();
+    accurate.send("NEXT");
+    expect(accurate.state.value).toBe("wait");
+    accurate.send("NEXT");
+    expect(accurate.state.value).toBe("color");
+    accurate.send("pink");
+    expect(accurate.state.value).toBe("measure_color_accurate");
+    accurate.send("NEXT");
+    accurate.send("closeup");
+    accurate.send("NEXT");
+    expect(accurate.state.value).toBe("done");
+    expect(accurate.state.context.measurements).toEqual([
+      { metric: "memory_reliability", value: 1 },
+      { metric: "memory_reliability", value: 1 },
+    ]);
+    expect(accurate.state.context.answers).toEqual({});
+    accurate.stop();
+
+    const misleading = interpret(compileFlowToMachine(config)).start();
+    misleading.send("NEXT");
+    misleading.send("NEXT");
+    misleading.send("yellow");
+    misleading.send("NEXT");
+    misleading.send("bee");
+    misleading.send("NEXT");
+    expect(misleading.state.value).toBe("done");
+    expect(misleading.state.context.measurements).toEqual([
+      { metric: "memory_reliability", value: 0 },
+      { metric: "memory_reliability", value: 0 },
+    ]);
+    expect(misleading.state.context.answers).toEqual({});
+    misleading.stop();
+  });
+
+  it("read-the-room compiles via the same compileFlowToMachine as Crisis Mode and scores deepfake_resilience", () => {
+    const crisis = getFlow("crisis-deepfake-classmate");
+    const room = getFlow("read-the-room");
+    const flowText = readFileSync(
+      join(dirname(fileURLToPath(import.meta.url)), "flows/read-the-room.v1.json"),
+      "utf8",
+    );
+
+    expect(room.type).toBe("experiment");
+    expect(room.track).toBe("Read the Room");
+    expect(room.skin).toBe("chat-bubble");
+    expect(crisis.skin).toBeUndefined();
+
+    const types = new Set(
+      Object.values(room.steps).map((step) => step.type),
+    );
+    expect(types).toEqual(
+      new Set([
+        "STOP",
+        "PRESERVE",
+        "BRANCH",
+        "TEMPLATE",
+        "RESOURCES",
+        "MEASURE",
+      ]),
+    );
+
+    expect(room.steps.template_group?.templateKey).toBe(
+      "read-the-room-group-pause",
+    );
+    expect(getMessageTemplate("read-the-room-group-pause").body).toMatch(
+      /don't forward/i,
+    );
+
+    expect(flowText).not.toMatch(/https?:\/\//);
+    expect(flowText).not.toMatch(/<(img|video)\b/i);
+    expect(flowText.toLowerCase()).toContain("never shows that clip");
+
+    const crisisMachine = compileFlowToMachine(crisis);
+    const roomMachine = compileFlowToMachine(room);
+    expect(crisisMachine.id).toBe("crisis-deepfake-classmate");
+    expect(roomMachine.id).toBe("read-the-room");
+    expect(roomMachine.initial).toBe("pause");
+
+    const verifyFirst = interpret(roomMachine).start();
+    verifyFirst.send("NEXT");
+    expect(verifyFirst.state.value).toBe("save_thread");
+    verifyFirst.send("NEXT");
+    expect(verifyFirst.state.value).toBe("first_reply");
+    verifyFirst.send("verify");
+    expect(verifyFirst.state.value).toBe("measure_verify");
+    verifyFirst.send("NEXT");
+    expect(verifyFirst.state.value).toBe("who");
+    verifyFirst.send("adult");
+    verifyFirst.send("NEXT");
+    expect(verifyFirst.state.value).toBe("template_group");
+    verifyFirst.send("NEXT");
+    expect(verifyFirst.state.value).toBe("resources");
+    expect(verifyFirst.state.context.measurements).toEqual([
+      { metric: "deepfake_resilience", value: 1 },
+      { metric: "deepfake_resilience", value: 1 },
+    ]);
+    expect(verifyFirst.state.context.answers).toEqual({});
+    expect(verifyFirst.state.done).toBe(true);
+    verifyFirst.stop();
+
+    const reshare = interpret(compileFlowToMachine(room)).start();
+    reshare.send("NEXT");
+    reshare.send("NEXT");
+    reshare.send("forward");
+    expect(reshare.state.value).toBe("measure_forward");
+    reshare.send("NEXT");
+    reshare.send("group_only");
+    reshare.send("NEXT");
+    expect(reshare.state.context.measurements).toEqual([
+      { metric: "deepfake_resilience", value: 0 },
+      { metric: "deepfake_resilience", value: 0 },
+    ]);
+    expect(reshare.state.done).toBe(false);
+    reshare.stop();
+  });
+
   it("throws for an unknown flowId", () => {
     expect(() => getFlow("does-not-exist")).toThrow(/Unknown flowId/);
   });
@@ -188,6 +400,10 @@ describe("listExperiments", () => {
         "experiment-stub",
         "experiment-dummy-b",
         "experiment-framing-pattern",
+        "framing-headlines",
+        "echo-chamber",
+        "memory-recall",
+        "read-the-room",
       ]),
     );
     expect(experiments.every((e) => !e.flowId.includes("crisis"))).toBe(true);
@@ -305,6 +521,45 @@ describe("getResources", () => {
   });
 });
 
+describe("echo-chamber feed catalog", () => {
+  it("keeps feed posts out of the flow JSON and loadable by feedKey", () => {
+    const srcDir = dirname(fileURLToPath(import.meta.url));
+    const flowText = readFileSync(
+      join(srcDir, "flows/echo-chamber.v1.json"),
+      "utf8",
+    );
+    const catalog = getFeed("echo-chamber");
+    const config = getFlow("echo-chamber");
+
+    expect(config.steps.perspective_diversity?.type).toBe("MEASURE");
+    expect(config.steps.perspective_diversity?.metric).toBe(
+      "perspective_diversity",
+    );
+    expect(config.steps.perspective_diversity?.payload).toEqual({
+      kind: "echo-feed",
+      feedKey: "echo-chamber",
+      clicks: 5,
+    });
+    expect(catalog.key).toBe("echo-chamber");
+    expect(catalog.items.length).toBeGreaterThanOrEqual(12);
+
+    const topics = new Set(catalog.items.flatMap((post) => post.topics));
+    expect(topics.size).toBeGreaterThan(1);
+
+    for (const post of catalog.items) {
+      expect(post.id.length).toBeGreaterThan(0);
+      expect(post.topics.length).toBeGreaterThan(0);
+      expect(post.headline.length).toBeGreaterThan(0);
+      expect(flowText).not.toContain(post.headline);
+      expect(flowText).not.toContain(post.id);
+    }
+  });
+
+  it("throws for an unknown feed key", () => {
+    expect(() => getFeed("does-not-exist")).toThrow(/Unknown feed/);
+  });
+});
+
 describe("getStepChrome", () => {
   it("loads per-step-type chrome used by flow-step components", () => {
     const chrome = getStepChrome();
@@ -313,10 +568,32 @@ describe("getStepChrome", () => {
     expect(chrome.stepTypes.BRANCH.title).toBe("Choose a path");
     expect(chrome.stepTypes.MEASURE.title).toBe("Measure");
     expect(chrome.stepTypes.TEMPLATE.titleFallback).toBe("Message template");
+    expect(chrome.stepTypes.TEMPLATE.nameLabel.length).toBeGreaterThan(0);
     expect(chrome.stepTypes.RESOURCES.eyebrow).toBe("Done for now");
     expect(chrome.stepTypes.RESOURCES.titleFallback).toBe("Resources");
     expect(chrome.empty.resources).toMatch(/No resources/);
     expect(chrome.empty.template).toMatch(/No message template/);
     expect(chrome.actions.continue).toBe("Continue");
+  });
+});
+
+describe("getProfileChrome", () => {
+  it("loads profile page chrome including the empty-state copy", () => {
+    const chrome = getProfileChrome();
+    expect(chrome.title.length).toBeGreaterThan(0);
+    expect(chrome.empty.action.length).toBeGreaterThan(0);
+    expect(chrome.empty.body.toLowerCase()).toMatch(/dashboard|scenario/);
+  });
+});
+
+describe("getReportChrome", () => {
+  it("loads reflection chrome without warning or verdict language", () => {
+    const chrome = getReportChrome();
+    expect(chrome.title.length).toBeGreaterThan(0);
+    expect(chrome.strengths.length).toBeGreaterThan(0);
+    expect(chrome.growthAreas.length).toBeGreaterThan(0);
+    expect(chrome.regenerate.length).toBeGreaterThan(0);
+    const blob = JSON.stringify(chrome).toLowerCase();
+    expect(blob).not.toMatch(/warning|danger|alert|error|fail|weakness/);
   });
 });

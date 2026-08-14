@@ -1,0 +1,145 @@
+{
+  "key": "echo-chamber",
+  "items": [
+    {
+      "id": "climate-solar-roofs",
+      "topics": ["climate"],
+      "headline": "City offers rebates for rooftop solar this spring",
+      "source": "Westbridge Civic Record",
+      "body": "Households can apply for a rebate covering up to 30% of panel installation. Applications open Monday. The program is funded from the existing energy-efficiency line, not a new tax."
+    },
+    {
+      "id": "climate-river-flood",
+      "topics": ["climate"],
+      "headline": "River gauge hits seasonal high after weekend rain",
+      "source": "Valley Weather Desk",
+      "body": "The west fork crested overnight but stayed below flood stage. Parks along the bank remain open. Forecasters expect levels to ease by Thursday."
+    },
+    {
+      "id": "climate-bus-lanes",
+      "topics": ["climate"],
+      "headline": "Pilot bus lane cuts commute times on Route 7",
+      "source": "Transit Brief",
+      "body": "A three-month trial reserved one lane at peak hours. Average trip time dropped 11 minutes. The board will vote next month on whether to keep it."
+    },
+    {
+      "id": "climate-heat-nights",
+      "topics": ["climate"],
+      "headline": "Overnight lows stay above 70 for a fifth straight day",
+      "source": "Regional Climate Notes",
+      "body": "Warm nights have kept cooling demand high. The utility asked customers to shift laundry and dishes to midday. No rolling outages are planned."
+    },
+    {
+      "id": "climate-tree-planting",
+      "topics": ["climate"],
+      "headline": "Saturday tree planting fills the last river-park plots",
+      "source": "Parks Desk",
+      "body": "Volunteers put in 40 saplings before noon. Watering is on a two-week rotation. The city asked neighbors not to tie banners to the stakes."
+    },
+    {
+      "id": "sports-final-whistle",
+      "topics": ["sports"],
+      "headline": "Hawks take the cup on a last-minute header",
+      "source": "Sideline Wire",
+      "body": "Maya Chen scored in stoppage time to finish 2–1. The visitors had equalized in the 80th. Fans spilled onto the concourse; no injuries were reported."
+    },
+    {
+      "id": "sports-rookie-start",
+      "topics": ["sports"],
+      "headline": "Rookie point guard named starter for Friday",
+      "source": "Gym Floor Report",
+      "body": "Jordan Hale will open against Eastside after three games off the bench. The coach cited ball pressure, not scoring. Tip-off is 7 p.m."
+    },
+    {
+      "id": "sports-track-record",
+      "topics": ["sports"],
+      "headline": "County meet: 800-meter record falls by half a second",
+      "source": "Prep Times",
+      "body": "Lina Ortiz ran 2:05.1, breaking a mark that stood since 2014. Wind was legal. She said the plan was even splits, not a kick."
+    },
+    {
+      "id": "sports-injury-update",
+      "topics": ["sports"],
+      "headline": "Star striker listed day-to-day with ankle sprain",
+      "source": "Club Notes",
+      "body": "Imaging showed no fracture. The club expects a decision after Wednesday's training. The next fixture is Saturday at home."
+    },
+    {
+      "id": "sports-swim-relay",
+      "topics": ["sports"],
+      "headline": "Relay team clips the regional mark by two tenths",
+      "source": "Poolside Notes",
+      "body": "The medley finished in 3:42.8. Officials confirmed the touchpads. The squad travels to sectionals next weekend."
+    },
+    {
+      "id": "tech-app-outage",
+      "topics": ["tech"],
+      "headline": "Transit app login fails for two hours, then returns",
+      "source": "Status Page Recap",
+      "body": "A certificate renewal stalled sign-in between 6 and 8 a.m. Tickets bought in that window were still valid. The vendor posted a postmortem."
+    },
+    {
+      "id": "tech-library-wifi",
+      "topics": ["tech"],
+      "headline": "Libraries add evening wifi hours after student survey",
+      "source": "Civic Tech Log",
+      "body": "Branches will keep the network on until 9 p.m. on weeknights. No staffed desk after close. The change starts next Monday."
+    },
+    {
+      "id": "tech-password-nudge",
+      "topics": ["tech"],
+      "headline": "School district asks families to turn on 2FA this week",
+      "source": "IT Bulletin",
+      "body": "A phishing wave last month targeted parent portals. The district will require an authenticator app by Friday. Paper backup codes are available at the office."
+    },
+    {
+      "id": "tech-open-data",
+      "topics": ["tech"],
+      "headline": "City publishes pothole reports as a weekly spreadsheet",
+      "source": "Open Data Desk",
+      "body": "The file lists street, ward, and days-to-fill. It will update every Friday noon. A map view is planned for later this year."
+    },
+    {
+      "id": "tech-repair-clinic",
+      "topics": ["tech"],
+      "headline": "Library hosts a laptop repair clinic this Thursday",
+      "source": "Skills Lab",
+      "body": "Slots are 20 minutes. Bring the charger. Volunteers will not recover data from cracked drives."
+    },
+    {
+      "id": "culture-mural-vote",
+      "topics": ["culture"],
+      "headline": "Neighbors pick a river mural from three finalists",
+      "source": "Arts Calendar",
+      "body": "Voting is open at the rec center through Sunday. The winning design goes on the floodwall in June. All three artists are local."
+    },
+    {
+      "id": "culture-night-market",
+      "topics": ["culture"],
+      "headline": "Friday night market adds a second music stage",
+      "source": "Downtown Listings",
+      "body": "Food stalls stay in the usual lot. The new stage faces the river path. Organizers asked visitors to use the garage, not side streets."
+    },
+    {
+      "id": "culture-library-club",
+      "topics": ["culture"],
+      "headline": "Saturday book club switches to a mystery this month",
+      "source": "Stacks Newsletter",
+      "body": "Copies are on the hold shelf. Discussion is 11 a.m. in the glass room. New readers are welcome; no signup required."
+    },
+    {
+      "id": "culture-high-school-play",
+      "topics": ["culture"],
+      "headline": "High school drama opens a two-weekend run of Our Town",
+      "source": "Campus Notices",
+      "body": "Shows are 7 p.m. Friday and Saturday. Student tickets are five dollars at the door. The auditorium is the old gym, not the new hall."
+    },
+    {
+      "id": "culture-choir-night",
+      "topics": ["culture"],
+      "headline": "Community choir sings on the courthouse steps at dusk",
+      "source": "Evening Listings",
+      "body": "The program is 45 minutes and free. Bring a chair if you want one. The last bus downtown leaves at 9:10."
+    }
+  ]
+}

@@ -14,13 +14,17 @@ AI-generated reflection report → profile builds over time.
 
 **Crisis path** (`/help`, no account, ever): one tap → five fixed steps (stop,
 preserve evidence, choose who to tell, send a template message, get resources) →
-leave. No score. No login. No data leaves the device in this phase of the build.
+leave. No score. No login. Completing Crisis Mode never writes a Supabase row.
+The canned template and resources are always available offline after first
+load. Optional online rewording (Phase 7) may POST already-fixed copy and
+falls back to the canned template when the network or model is unavailable.
 
-## 3. Scope for Phases 1–4
-Building now: the shared step/flow engine, Crisis Mode (fully complete, standalone,
-offline-capable), and the experiment framework skeleton (proves the same engine
-runs a second flow type — not the full Framing/Echo/Memory/Read-the-Room content
-yet, that's Phase 5+).
+## 3. Current scope
+Phases 1–8 are in this tree: shared engine, Crisis Mode (standalone, offline
+after first load), four scored experiments, analytics, AI reflection /
+optional template rewording, Playwright journeys, a11y, and Vercel deploy of
+`apps/web` only. Flow configs remain static JSON under
+`packages/content-config` (not CMS tables). `apps/edge-api` stays parked.
 
 ## 4. Shared Step Schema — the core contract
 This is the single most important design decision in the system. Every flow —
@@ -51,6 +55,7 @@ export const StepSchema = z.object({
   weight: z.number().optional(),        // MEASURE steps
   options: z.array(StepOptionSchema).optional(), // BRANCH steps
   next: z.string().optional(),          // linear steps
+  payload: z.record(z.string(), z.unknown()).optional(),
 });
 
 export const FlowConfigSchema = z.object({
@@ -58,6 +63,9 @@ export const FlowConfigSchema = z.object({
   version: z.number().int().positive(),
   type: z.enum(["crisis", "experiment"]),
   title: z.string(),
+  track: z.string().optional(),   // required when type is experiment
+  teaser: z.string().optional(),  // required when type is experiment
+  skin: z.enum(["chat-bubble"]).optional(), // presentation only; engine ignores
   initial: z.string(),
   steps: z.record(z.string(), StepSchema), // keyed dynamically — no hardcoded step list anywhere
 });
@@ -83,8 +91,21 @@ action buttons, and empty-state copy for STOP / PRESERVE / BRANCH / TEMPLATE /
 RESOURCES / MEASURE live in
 `packages/content-config/src/chrome/stepChrome.en.json`, loaded via
 `getStepChrome()`. They are shared UI chrome for every flow. Scenario copy
-(`prompt`, `why`, option labels, templates, resources) stays on the flow JSON.
-Do not hardcode chrome strings in `apps/web/src/components/flow-steps`.
+(`prompt`, `why`, option labels, templates, resources, `payload`) stays on
+the flow JSON. Do not hardcode chrome strings in
+`apps/web/src/components/flow-steps`.
+
+**Step payload (generic, per-experiment):** `payload` is optional stimulus
+the engine does not understand — article variants, clips, and other
+experiment-specific content. The core schema only types it as
+`Record<string, unknown>`. Stricter shapes (for example
+`payload.kind === "article-compare"`) are validated at the component that
+renders that kind, not in `StepSchema`. Do not add per-experiment fields to
+the shared step contract.
+
+**Flow skin (presentation only):** optional `skin: "chat-bubble"` restyles
+`StepRenderer` output. The engine and `compileFlowToMachine` ignore it. It
+is not a step type.
 
 ### BRANCH choices and scoring (locked decision)
 
@@ -174,9 +195,9 @@ flowchart TB
         PG[("PostgreSQL")]
         RLS["Row-Level Security"]
     end
-    subgraph AI["AI Layer (Phase 7, not built yet)"]
+    subgraph AI["AI Layer (Phase 7)"]
         SDK["Vercel AI SDK"]
-        MODEL["GPT-4o-mini / Claude 3.5 Haiku"]
+        MODEL["GPT-4o-mini"]
     end
     XSTATE -.compiled from.-> ENGINE
     ENGINE -.validates against.-> SCHEMAS
@@ -185,11 +206,10 @@ flowchart TB
     RH --> AUTH
     RH --> PG
     PG --- RLS
-    RH -.later.-> SDK
+    RH --> SDK
     SDK --> MODEL
     HONO -.imports.-> SCHEMAS
     HONO -.imports.-> ENGINE
-    style AI stroke-dasharray: 5 5
     style EDGE stroke-dasharray: 5 5
 ```
 
@@ -200,7 +220,7 @@ flowchart LR
     U["User"] --> WEB["Next.js App (Web + API)"]
     WEB --> ENGINE["Config-Driven Decision Engine (XState + JSON)"]
     WEB --> AUTH["Supabase (Auth + Postgres + RLS)"]
-    ENGINE -.future.-> AI["AI Reflection (Vercel AI SDK)"]
+    ENGINE --> AI["AI Reflection (Vercel AI SDK)"]
     WEB -.offline.-> PWA["Service Worker + IndexedDB"]
 ```
 
@@ -213,7 +233,7 @@ flowchart LR
 6. RLS is default-deny; permissive policies are added explicitly, one at a time, as auth is wired.
 7. Strict TypeScript, no `any`.
 
-## 9. Full Phase Map (for context — only Phases 1–4 are being built now)
+## 9. Full Phase Map (Phases 1–8 are built)
 1. Foundation & Shared Contracts
 2. Core Decision-Tree Engine
 3. Crisis Mode (Complete, Standalone)
@@ -222,3 +242,28 @@ flowchart LR
 6. Analytics Engine
 7. AI Reflection Layer
 8. Integration, Polish, and Submission
+
+## 10. Scoring rules are data
+
+How a run's MEASURE observations become a score is JSON, not code. Drop
+`{flowId}.v{version}.json` into `packages/content-config/src/scoring-rules/`.
+Each file is an array of `ScoringRule` objects (`packages/schemas` —
+`ScoringRuleSchema`): `metric`, `aggregation` (`sum` | `average` | `last`),
+`normalizeToRange` `[low, high]`, `description`.
+
+A rule only says how to **combine** observations already recorded on that
+flow. `metric` must name a MEASURE step's `metric` in the matching flow JSON.
+Rules do not declare new measurements, weights, or step sequences. Phase 6
+reads `context.measurements` plus these rules; it does not look up BRANCH
+answers (§4).
+
+After a session's `flow_scores` are written, `aggregateProfile(userId)`
+recomputes `profiles.aggregated_scores` from **all** of that user's completed
+sessions. Default rollup per dimension is average across sessions; a rule
+may set `acrossSessions` (`sum` | `average` | `last`) to override. This runs
+**synchronously** on `POST /api/sessions/[id]/score` after the score upsert
+(not fire-and-forget): the completion response means scores and profile are
+both durable, and a missed background job would leave the profile stale with
+no retry. Writes use the service role; Phase 4 RLS
+(`profiles_select_own` / `profiles_update_own`, `auth.uid() = user_id`) still
+blocks any other authenticated user from reading the row.

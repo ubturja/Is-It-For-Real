@@ -1,0 +1,8 @@
+[
+  {
+    "metric": "memory_reliability",
+    "aggregation": "average",
+    "normalizeToRange": [0, 1],
+    "description": "Mean of the recall-item observations, then scale onto 0–1."
+  }
+]

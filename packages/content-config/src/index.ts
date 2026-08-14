@@ -1,10 +1,13 @@
-import type { FlowConfig } from "@isitfr/schemas";
+import type { FlowConfig, ScoringRule, ScoringRules } from "@isitfr/schemas";
 
 import crisisDeepfakeClassmateResources from "./resources/crisis-deepfake-classmate.json";
+import echoChamberFeed from "./feeds/echo-chamber.json";
 import trustedAdultEn from "./templates/crisis-deepfake-classmate-trusted-adult.en.json";
 import schoolContactEn from "./templates/crisis-deepfake-classmate-school-contact.en.json";
 import platformReportEn from "./templates/crisis-deepfake-classmate-platform-report.en.json";
+import readTheRoomGroupPauseEn from "./templates/read-the-room-group-pause.en.json";
 import { flowRegistry } from "./loadFlows";
+import { scoringRuleRegistry } from "./loadScoringRules";
 
 const DEFAULT_LOCALE = "en";
 
@@ -29,6 +32,19 @@ export type ResourceSet = {
   resources: ResourceLink[];
 };
 
+export type FeedPost = {
+  id: string;
+  topics: string[];
+  headline: string;
+  source: string;
+  body: string;
+};
+
+export type FeedCatalog = {
+  key: string;
+  items: FeedPost[];
+};
+
 /** Listing fields for the /train dashboard — never includes scoring spoilers. */
 export type ExperimentSummary = {
   flowId: string;
@@ -45,11 +61,19 @@ const messageTemplateRegistry: Record<
   [trustedAdultEn.key]: { [trustedAdultEn.locale]: trustedAdultEn },
   [schoolContactEn.key]: { [schoolContactEn.locale]: schoolContactEn },
   [platformReportEn.key]: { [platformReportEn.locale]: platformReportEn },
+  [readTheRoomGroupPauseEn.key]: {
+    [readTheRoomGroupPauseEn.locale]: readTheRoomGroupPauseEn,
+  },
 };
 
 /** MVP: a single default resource set (no region variants yet). */
 const resourceSetRegistry: Record<string, ResourceSet> = {
   [crisisDeepfakeClassmateResources.key]: crisisDeepfakeClassmateResources,
+};
+
+/** Feed datasets live under src/feeds — never inlined in flow JSON. */
+const feedRegistry: Record<string, FeedCatalog> = {
+  [echoChamberFeed.key]: echoChamberFeed,
 };
 
 /**
@@ -94,6 +118,10 @@ export function listExperiments(): ExperimentSummary[] {
   }));
 }
 
+export function hasMessageTemplate(key: string): boolean {
+  return Object.prototype.hasOwnProperty.call(messageTemplateRegistry, key);
+}
+
 /**
  * Load a static message template by key (and optional locale).
  * Bundled content only — no network or LLM. Falls back to `en` when the
@@ -134,6 +162,48 @@ export function getResources(setKey: string): ResourceSet {
   return set;
 }
 
-export type { FlowConfig };
+/**
+ * Load a static feed catalog by key (Echo Chamber items, etc.).
+ * Bundled content only — not inlined in flow JSON.
+ */
+export function getFeed(feedKey: string): FeedCatalog {
+  const catalog = feedRegistry[feedKey];
+  if (catalog === undefined) {
+    throw new Error(`Unknown feed: "${feedKey}"`);
+  }
+  return catalog;
+}
+
+/**
+ * Load scoring rules for a flow (how to combine MEASURE observations).
+ * Missing file throws — stubs without rules are checked via `hasScoringRules`.
+ */
+export function getScoringRules(flowId: string): ScoringRules {
+  const rules = scoringRuleRegistry[flowId];
+  if (rules === undefined) {
+    throw new Error(`Unknown scoring rules for flowId: "${flowId}"`);
+  }
+  return rules;
+}
+
+export function hasScoringRules(flowId: string): boolean {
+  return Object.prototype.hasOwnProperty.call(scoringRuleRegistry, flowId);
+}
+
+export function profileAggregationFor(
+  metric: string,
+): ScoringRule["aggregation"] {
+  for (const rules of Object.values(scoringRuleRegistry)) {
+    const rule = rules.find((entry) => entry.metric === metric);
+    if (rule !== undefined) {
+      return rule.acrossSessions ?? "average";
+    }
+  }
+  return "average";
+}
+
+export type { FlowConfig, ScoringRules };
 export { getStepChrome, stepChrome } from "./stepChrome";
-export type { StepChrome } from "@isitfr/schemas";
+export { getProfileChrome, profileChrome } from "./profileChrome";
+export { getReportChrome, reportChrome } from "./reportChrome";
+export type { StepChrome, ProfileChrome, ReportChrome } from "@isitfr/schemas";

@@ -1,15 +1,9 @@
 import { getStepChrome } from "@isitfr/content-config";
 
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardFooter } from "@/components/ui/card";
 
+import { StepTypeHeader } from "./StepTypeHeader";
 import type { StepComponentProps } from "./types";
 
 export function PreserveStep({ step, onAdvance }: StepComponentProps) {
@@ -17,10 +11,11 @@ export function PreserveStep({ step, onAdvance }: StepComponentProps) {
 
   return (
     <Card>
-      <CardHeader>
-        <CardTitle>{chrome.stepTypes.PRESERVE.title}</CardTitle>
-        <CardDescription>{step.prompt}</CardDescription>
-      </CardHeader>
+      <StepTypeHeader
+        type="PRESERVE"
+        title={chrome.stepTypes.PRESERVE.title}
+        description={step.prompt}
+      />
       {step.why ? (
         <CardContent>
           <p className="text-muted-foreground text-sm">{step.why}</p>

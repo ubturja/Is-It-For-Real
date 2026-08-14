@@ -85,7 +85,18 @@ export function isUnexpectedCrisisXhrOrFetch(request: Request): boolean {
   if (isExplicitResourceNavigation(request)) {
     return false;
   }
+  if (isCrisisPersonalizeRequest(request)) {
+    return false;
+  }
   return true;
+}
+
+function isCrisisPersonalizeRequest(request: Request): boolean {
+  if (request.method() !== "POST") {
+    return false;
+  }
+  const pathname = pathnameOf(request.url());
+  return pathname === "/api/crisis/personalize-template";
 }
 
 export function formatRequest(request: Request): string {
@@ -93,8 +104,9 @@ export function formatRequest(request: Request): string {
 }
 
 /**
- * Record xhr/fetch for a full online /help run. Shell load and "Open resource"
- * navigations are kept on the log but not treated as unexpected.
+ * Record xhr/fetch for a full online /help run. Shell load, optional
+ * personalize-template enhancement, and "Open resource" navigations are
+ * kept on the log but not treated as unexpected.
  */
 export function attachCrisisNetworkLog(page: Page): {
   unexpected: () => string[];

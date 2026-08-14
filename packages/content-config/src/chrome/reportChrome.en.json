@@ -1,0 +1,13 @@
+{
+  "locale": "en",
+  "title": "A short reflection",
+  "intro": "A few notes from this run. Nothing here is a verdict.",
+  "strengths": "What went well",
+  "growthAreas": "Worth trying next time",
+  "regenerate": "Write this again",
+  "regenerating": "Writing…",
+  "regenerateWait": "Give it a moment",
+  "loading": "Writing a short reflection…",
+  "unavailable": "This reflection didn't come through. You can try again in a moment.",
+  "back": "Back to scenarios"
+}

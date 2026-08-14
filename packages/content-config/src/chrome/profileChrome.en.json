@@ -1,0 +1,10 @@
+{
+  "locale": "en",
+  "title": "Your profile",
+  "intro": "A picture of the scenarios you've completed so far. It fills in as you go.",
+  "empty": {
+    "title": "Nothing here yet",
+    "body": "Complete a scenario on the dashboard and this page will start to take shape. You don't need to know what's being measured — just pick one and go through it.",
+    "action": "See scenarios"
+  }
+}
