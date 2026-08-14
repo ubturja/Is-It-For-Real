@@ -1,6 +1,7 @@
 import { test, expect } from "@playwright/test";
 
 import { isSupabaseNetworkRequest } from "./helpers/auth";
+import { getStepChrome } from "./helpers/content";
 import {
   completeTrustedAdultFlow,
   expectBranchStep,
@@ -69,33 +70,97 @@ test.describe("Crisis Mode /help", () => {
 
     await context.setOffline(true);
     await page.reload({ waitUntil: "domcontentloaded" });
+    await page.evaluate(() => {
+      Object.defineProperty(navigator, "onLine", {
+        configurable: true,
+        get: () => false,
+      });
+    });
 
     await goToTrustedAdultTemplate(page);
 
     const started = Date.now();
     await expectStaticTrustedAdultTemplate(page);
     expect(Date.now() - started).toBeLessThan(1_500);
+    await expect(
+      page.getByRole("button", {
+        name: getStepChrome().stepTypes.TEMPLATE.personalize,
+      }),
+    ).toBeDisabled();
   });
 
-  test("online personalize replaces the static template body", async ({
+  test("loading TemplateStep online does not personalize until the user taps", async ({
     page,
   }) => {
+    const personalizePosts: string[] = [];
     await page.route("**/api/crisis/personalize-template", async (route) => {
+      personalizePosts.push(route.request().postData() ?? "");
       await route.fulfill({
         status: 200,
         contentType: "application/json",
         body: JSON.stringify({
           title: "Message to a trusted adult",
-          body: "Hi Alex, I need your help with something that happened.",
+          body: "Hi {{name}}, I need your help with something that happened.",
         }),
       });
     });
 
     await page.goto("/help");
     await goToTrustedAdultTemplate(page);
+    await expectStaticTrustedAdultTemplate(page);
+    await page.evaluate(
+      () => new Promise((resolve) => setTimeout(resolve, 1500)),
+    );
+    expect(personalizePosts).toEqual([]);
+
+    await page
+      .getByRole("button", {
+        name: getStepChrome().stepTypes.TEMPLATE.personalize,
+      })
+      .click();
+    await expect.poll(() => personalizePosts.length).toBeGreaterThan(0);
+  });
+
+  test("online personalize keeps the typed name off the wire and on screen", async ({
+    page,
+  }) => {
+    const postedBodies: string[] = [];
+    await page.route("**/api/crisis/personalize-template", async (route) => {
+      postedBodies.push(route.request().postData() ?? "");
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({
+          title: "Message to a trusted adult",
+          body: "Hi {{name}}, I need your help with something that happened.",
+        }),
+      });
+    });
+
+    await page.goto("/help");
+    await goToTrustedAdultTemplate(page);
+    await expectStaticTrustedAdultTemplate(page);
+    expect(postedBodies).toEqual([]);
+
+    await page
+      .getByLabel(getStepChrome().stepTypes.TEMPLATE.nameLabel)
+      .fill("Alex Rivera");
+    await page
+      .getByRole("button", {
+        name: getStepChrome().stepTypes.TEMPLATE.personalize,
+      })
+      .click();
     await expect(
-      page.getByText("Hi Alex, I need your help with something that happened."),
+      page.getByText(
+        "Hi Alex Rivera, I need your help with something that happened.",
+      ),
     ).toBeVisible();
+
+    expect(postedBodies.length).toBeGreaterThan(0);
+    for (const body of postedBodies) {
+      expect(body).not.toContain("Alex Rivera");
+      expect(body).not.toMatch(/"name"/);
+    }
     await expect(page.getByText("[classmate's name]")).toHaveCount(0);
   });
 

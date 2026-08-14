@@ -7,7 +7,7 @@ import { compileFlowToMachine } from "@isitfr/engine";
 import { validateFlowConfig } from "@isitfr/schemas";
 import { interpret } from "xstate";
 
-import { getFeed, getFlow, getMessageTemplate, getProfileChrome, getReportChrome, getResources, getStepChrome, listExperiments, listFlows } from "./index";
+import { getDashboardChrome, getFeed, getFlow, getMessageTemplate, getProfileChrome, getReportChrome, getResources, getStepChrome, listExperiments, listFlows } from "./index";
 
 const FLOWS_DIR = join(dirname(fileURLToPath(import.meta.url)), "flows");
 const FLOW_FILENAME_RE = /\.v.+\.json$/;
@@ -180,13 +180,13 @@ describe("getFlow", () => {
     expect(config.steps.measure_emotional).toMatchObject({
       type: "MEASURE",
       metric: "framing_bias",
-      weight: 1,
+      weight: 0.5,
       next: "done",
     });
     expect(config.steps.measure_political).toMatchObject({
       type: "MEASURE",
       metric: "framing_bias",
-      weight: 2,
+      weight: 1,
       next: "done",
     });
 
@@ -198,7 +198,7 @@ describe("getFlow", () => {
     service.send("NEXT");
     expect(service.state.value).toBe("done");
     expect(service.state.context.measurements).toEqual([
-      { metric: "framing_bias", value: 1 },
+      { metric: "framing_bias", value: 0.5 },
     ]);
     expect(service.state.done).toBe(true);
     service.stop();
@@ -384,27 +384,102 @@ describe("glob discovery", () => {
       expect(config.type).toBe(entry.type);
     }
   });
+
+  it("does not hand-import templates, feeds, or resource sets", () => {
+    const srcDir = dirname(fileURLToPath(import.meta.url));
+    const indexSrc = readFileSync(join(srcDir, "index.ts"), "utf8");
+    expect(indexSrc).not.toMatch(/from ["']\.\/templates\//);
+    expect(indexSrc).not.toMatch(/from ["']\.\/feeds\//);
+    expect(indexSrc).not.toMatch(/from ["']\.\/resources\//);
+
+    for (const loader of ["loadTemplates.ts", "loadFeeds.ts", "loadResources.ts"]) {
+      const loaderSrc = readFileSync(join(srcDir, loader), "utf8");
+      expect(loaderSrc).not.toMatch(/from ["']\.\/(templates|feeds|resources)\//);
+      expect(loaderSrc).toMatch(/import\.meta\.glob/);
+    }
+  });
+
+  it("makes every on-disk template JSON loadable via getMessageTemplate", () => {
+    const srcDir = dirname(fileURLToPath(import.meta.url));
+    const files = readdirSync(join(srcDir, "templates")).filter((name) =>
+      name.endsWith(".json"),
+    );
+    expect(files.length).toBeGreaterThan(0);
+
+    for (const file of files) {
+      const parsed: unknown = JSON.parse(
+        readFileSync(join(srcDir, "templates", file), "utf8"),
+      );
+      if (
+        typeof parsed !== "object" ||
+        parsed === null ||
+        !("key" in parsed) ||
+        !("locale" in parsed) ||
+        typeof parsed.key !== "string" ||
+        typeof parsed.locale !== "string"
+      ) {
+        throw new Error(`Template file ${file} is missing key/locale`);
+      }
+      const loaded = getMessageTemplate(parsed.key, parsed.locale);
+      expect(loaded.key).toBe(parsed.key);
+      expect(loaded.locale).toBe(parsed.locale);
+    }
+  });
+
+  it("makes every on-disk resource-set JSON loadable via getResources", () => {
+    const srcDir = dirname(fileURLToPath(import.meta.url));
+    const files = readdirSync(join(srcDir, "resources")).filter((name) =>
+      name.endsWith(".json"),
+    );
+    expect(files.length).toBeGreaterThan(0);
+
+    for (const file of files) {
+      const parsed: unknown = JSON.parse(
+        readFileSync(join(srcDir, "resources", file), "utf8"),
+      );
+      if (
+        typeof parsed !== "object" ||
+        parsed === null ||
+        !("key" in parsed) ||
+        typeof parsed.key !== "string"
+      ) {
+        throw new Error(`Resource file ${file} is missing key`);
+      }
+      expect(getResources(parsed.key).key).toBe(parsed.key);
+    }
+  });
+
+  it("makes every on-disk feed JSON loadable via getFeed", () => {
+    const srcDir = dirname(fileURLToPath(import.meta.url));
+    const files = readdirSync(join(srcDir, "feeds")).filter((name) =>
+      name.endsWith(".json"),
+    );
+    expect(files.length).toBeGreaterThan(0);
+
+    for (const file of files) {
+      const parsed: unknown = JSON.parse(
+        readFileSync(join(srcDir, "feeds", file), "utf8"),
+      );
+      if (
+        typeof parsed !== "object" ||
+        parsed === null ||
+        !("key" in parsed) ||
+        typeof parsed.key !== "string"
+      ) {
+        throw new Error(`Feed file ${file} is missing key`);
+      }
+      expect(getFeed(parsed.key).key).toBe(parsed.key);
+    }
+  });
 });
 
 describe("listExperiments", () => {
-  it("returns every experiment with title, track, and teaser (no crisis flows)", () => {
+  it("lists only production experiments (dev stubs stay loadable via getFlow)", () => {
     const experiments = listExperiments();
-    const experimentIdsOnDisk = flowFilesOnDisk()
-      .filter((entry) => entry.type === "experiment")
-      .map((entry) => entry.flowId)
-      .sort();
+    const listedIds = experiments.map((e) => e.flowId).sort();
 
-    expect(experiments.map((e) => e.flowId).sort()).toEqual(experimentIdsOnDisk);
-    expect(experimentIdsOnDisk).toEqual(
-      expect.arrayContaining([
-        "experiment-stub",
-        "experiment-dummy-b",
-        "experiment-framing-pattern",
-        "framing-headlines",
-        "echo-chamber",
-        "memory-recall",
-        "read-the-room",
-      ]),
+    expect(listedIds).toEqual(
+      ["echo-chamber", "framing-headlines", "memory-recall", "read-the-room"].sort(),
     );
     expect(experiments.every((e) => !e.flowId.includes("crisis"))).toBe(true);
 
@@ -412,11 +487,14 @@ describe("listExperiments", () => {
       expect(experiment.title.length).toBeGreaterThan(0);
       expect(experiment.track.length).toBeGreaterThan(0);
       expect(experiment.teaser.length).toBeGreaterThan(0);
-      // No scoring spoilers in listing copy.
       expect(experiment.teaser.toLowerCase()).not.toMatch(
         /metric|score|test(s|ing)? your/,
       );
     }
+
+    expect(getFlow("experiment-stub").listed).toBe(false);
+    expect(getFlow("experiment-dummy-b").listed).toBe(false);
+    expect(getFlow("experiment-framing-pattern").listed).toBe(false);
   });
 });
 
@@ -569,11 +647,22 @@ describe("getStepChrome", () => {
     expect(chrome.stepTypes.MEASURE.title).toBe("Measure");
     expect(chrome.stepTypes.TEMPLATE.titleFallback).toBe("Message template");
     expect(chrome.stepTypes.TEMPLATE.nameLabel.length).toBeGreaterThan(0);
+    expect(chrome.stepTypes.TEMPLATE.personalize.length).toBeGreaterThan(0);
     expect(chrome.stepTypes.RESOURCES.eyebrow).toBe("Done for now");
     expect(chrome.stepTypes.RESOURCES.titleFallback).toBe("Resources");
     expect(chrome.empty.resources).toMatch(/No resources/);
     expect(chrome.empty.template).toMatch(/No message template/);
     expect(chrome.actions.continue).toBe("Continue");
+    expect(chrome.persist.unsaved.length).toBeGreaterThan(0);
+  });
+});
+
+describe("getDashboardChrome", () => {
+  it("loads train dashboard chrome without inlining it in the page", () => {
+    const chrome = getDashboardChrome();
+    expect(chrome.title.length).toBeGreaterThan(0);
+    expect(chrome.intro.length).toBeGreaterThan(0);
+    expect(chrome.profile.length).toBeGreaterThan(0);
   });
 });
 

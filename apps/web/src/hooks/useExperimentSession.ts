@@ -10,6 +10,17 @@ import {
   type MutableRefObject,
 } from "react";
 
+import {
+  clearPersistQueue,
+  enqueueInteraction,
+  loadPersistQueue,
+  markNeedsScore,
+  markSessionFailed,
+  persistQueueIsUnsaved,
+  rememberSessionId,
+  replaceQueuedInteractions,
+  type QueuedInteraction,
+} from "@/lib/sessions/persistQueue";
 import { createClient } from "@/lib/supabase/client";
 
 import {
@@ -22,29 +33,62 @@ export type ScoreStatus = "idle" | "pending" | "ready" | "failed";
 export type ExperimentSessionResult = UseFlowMachineResult & {
   sessionId: string | null;
   scoreStatus: ScoreStatus;
+  persistUnsaved: boolean;
 };
 
 /**
  * Training-only persistence around useFlowMachine.
  * Must never be used by /help — Crisis Mode has zero Supabase writes
  * (SYSTEM_REFERENCE.md §8 principle 4).
+ *
+ * Write failures never block the UI. They are queued, retried on the next
+ * mount / next write, and surfaced via persistUnsaved.
  */
 export function useExperimentSession(flowId: string): ExperimentSessionResult {
   const flow = useFlowMachine(flowId);
   const sessionPromiseRef = useRef<Promise<string | null> | null>(null);
   const measureStartedAtRef = useRef<number | null>(null);
   const pendingWritesRef = useRef(Promise.resolve());
+  const doneRef = useRef(flow.done);
+  doneRef.current = flow.done;
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [scoreStatus, setScoreStatus] = useState<ScoreStatus>("idle");
+  const [persistUnsaved, setPersistUnsaved] = useState(() =>
+    persistQueueIsUnsaved(loadPersistQueue(flowId)),
+  );
+
+  const refreshUnsaved = useCallback(() => {
+    setPersistUnsaved(persistQueueIsUnsaved(loadPersistQueue(flowId)));
+  }, [flowId]);
 
   useEffect(() => {
-    sessionPromiseRef.current = insertInProgressSession(flowId);
-    void sessionPromiseRef.current.then((id) => {
-      if (id) {
-        setSessionId(id);
+    sessionPromiseRef.current = resumeOrStartSession(flowId).then(async (id) => {
+      if (!id) {
+        refreshUnsaved();
+        return null;
       }
+      setSessionId(id);
+      await flushQueuedInteractions(flowId, id);
+      const queue = loadPersistQueue(flowId);
+      if (queue.needsScore) {
+        const scored = await scoreCompletedSession(id);
+        if (scored) {
+          clearPersistQueue(flowId);
+          setScoreStatus("ready");
+          if (!doneRef.current) {
+            const fresh = await insertInProgressSession(flowId);
+            if (fresh) {
+              setSessionId(fresh);
+            }
+            refreshUnsaved();
+            return fresh;
+          }
+        }
+      }
+      refreshUnsaved();
+      return id;
     });
-  }, [flowId]);
+  }, [flowId, refreshUnsaved]);
 
   useEffect(() => {
     if (flow.step?.type === "MEASURE") {
@@ -66,6 +110,8 @@ export function useExperimentSession(flowId: string): ExperimentSessionResult {
         return;
       }
       if (!id) {
+        markNeedsScore(flowId, true);
+        refreshUnsaved();
         setScoreStatus("failed");
         return;
       }
@@ -74,16 +120,26 @@ export function useExperimentSession(flowId: string): ExperimentSessionResult {
       if (cancelled) {
         return;
       }
+      await flushQueuedInteractions(flowId, id);
       const scored = await scoreCompletedSession(id);
       if (cancelled) {
         return;
       }
-      setScoreStatus(scored ? "ready" : "failed");
+      if (scored) {
+        markNeedsScore(flowId, false);
+        clearPersistQueue(flowId);
+        refreshUnsaved();
+        setScoreStatus("ready");
+        return;
+      }
+      markNeedsScore(flowId, true);
+      refreshUnsaved();
+      setScoreStatus("failed");
     })();
     return () => {
       cancelled = true;
     };
-  }, [flow.done, flowId]);
+  }, [flow.done, flowId, refreshUnsaved]);
 
   const onAdvance = useCallback(
     (value?: string | number) => {
@@ -92,24 +148,31 @@ export function useExperimentSession(flowId: string): ExperimentSessionResult {
         const choice_value = measureChoiceValue(value, flow.step);
         const reaction_time_ms = reactionTimeMs(measureStartedAtRef.current);
         pendingWritesRef.current = pendingWritesRef.current.then(() =>
-          ensureSession(sessionPromiseRef, flowId).then((id) => {
-            if (!id) {
-              return;
-            }
-            return insertMeasureInteraction(id, {
+          ensureSession(sessionPromiseRef, flowId).then(async (id) => {
+            const payload: QueuedInteraction = {
               stepId,
               choice_value,
               reaction_time_ms,
-            });
+            };
+            if (!id) {
+              enqueueInteraction(flowId, payload);
+              refreshUnsaved();
+              return;
+            }
+            const written = await insertMeasureInteraction(id, payload);
+            if (!written) {
+              enqueueInteraction(flowId, payload);
+            }
+            refreshUnsaved();
           }),
         );
       }
       flow.onAdvance(value);
     },
-    [flow, flowId],
+    [flow, flowId, refreshUnsaved],
   );
 
-  return { ...flow, onAdvance, sessionId, scoreStatus };
+  return { ...flow, onAdvance, sessionId, scoreStatus, persistUnsaved };
 }
 
 export function measureChoiceValue(
@@ -140,9 +203,19 @@ function ensureSession(
   flowId: string,
 ): Promise<string | null> {
   if (!ref.current) {
-    ref.current = insertInProgressSession(flowId);
+    ref.current = resumeOrStartSession(flowId).then((id) => {
+      if (!id) {
+        ref.current = null;
+      }
+      return id;
+    });
   }
-  return ref.current;
+  return ref.current.then((id) => {
+    if (!id) {
+      ref.current = null;
+    }
+    return id;
+  });
 }
 
 function hasStringId(row: unknown): row is { id: string } {
@@ -152,6 +225,31 @@ function hasStringId(row: unknown): row is { id: string } {
   return typeof row.id === "string";
 }
 
+async function resumeOrStartSession(flowId: string): Promise<string | null> {
+  const queued = loadPersistQueue(flowId);
+  if (queued.sessionId) {
+    const live = await sessionStatus(queued.sessionId);
+    if (live === "in_progress") {
+      return queued.sessionId;
+    }
+    clearPersistQueue(flowId);
+  }
+  return insertInProgressSession(flowId);
+}
+
+async function sessionStatus(sessionId: string): Promise<string | null> {
+  const supabase = createClient();
+  const { data, error } = await supabase
+    .from("flow_sessions")
+    .select("status")
+    .eq("id", sessionId)
+    .maybeSingle();
+  if (error || data === null || typeof data.status !== "string") {
+    return null;
+  }
+  return data.status;
+}
+
 async function insertInProgressSession(flowId: string): Promise<string | null> {
   const supabase = createClient();
   const {
@@ -159,10 +257,7 @@ async function insertInProgressSession(flowId: string): Promise<string | null> {
     error: userError,
   } = await supabase.auth.getUser();
   if (userError || !user) {
-    console.error(
-      "useExperimentSession: no authenticated user",
-      userError?.message,
-    );
+    markSessionFailed(flowId);
     return null;
   }
 
@@ -180,37 +275,28 @@ async function insertInProgressSession(flowId: string): Promise<string | null> {
     .single();
 
   if (error || !hasStringId(data)) {
-    console.error(
-      "useExperimentSession: failed to start session",
-      error?.message,
-    );
+    markSessionFailed(flowId);
     return null;
   }
+  rememberSessionId(flowId, data.id);
   return data.id;
 }
 
 async function scoreCompletedSession(sessionId: string): Promise<boolean> {
-  const response = await fetch(`/api/sessions/${sessionId}/score`, {
-    method: "POST",
-  });
-  if (!response.ok) {
-    console.error(
-      "useExperimentSession: failed to complete and score session",
-      response.status,
-    );
+  try {
+    const response = await fetch(`/api/sessions/${sessionId}/score`, {
+      method: "POST",
+    });
+    return response.ok;
+  } catch {
     return false;
   }
-  return true;
 }
 
 async function insertMeasureInteraction(
   sessionId: string,
-  payload: {
-    stepId: string;
-    choice_value: string;
-    reaction_time_ms: number;
-  },
-): Promise<void> {
+  payload: QueuedInteraction,
+): Promise<boolean> {
   const supabase = createClient();
   const { error } = await supabase.from("flow_interactions").insert({
     session_id: sessionId,
@@ -218,11 +304,23 @@ async function insertMeasureInteraction(
     choice_value: payload.choice_value,
     reaction_time_ms: payload.reaction_time_ms,
   });
+  return !error;
+}
 
-  if (error) {
-    console.error(
-      "useExperimentSession: failed to record interaction",
-      error.message,
-    );
+async function flushQueuedInteractions(
+  flowId: string,
+  sessionId: string,
+): Promise<void> {
+  const queue = loadPersistQueue(flowId);
+  if (queue.interactions.length === 0) {
+    return;
   }
+  const remaining: QueuedInteraction[] = [];
+  for (const item of queue.interactions) {
+    const written = await insertMeasureInteraction(sessionId, item);
+    if (!written) {
+      remaining.push(item);
+    }
+  }
+  replaceQueuedInteractions(flowId, remaining);
 }

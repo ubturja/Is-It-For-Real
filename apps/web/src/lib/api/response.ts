@@ -25,6 +25,7 @@ export function jsonSuccess<T>(data: T, init: JsonInit = {}): NextResponse<T> {
 export function jsonError(
   error: { code: string; message: string; details?: unknown },
   status = 400,
+  headers?: HeadersInit,
 ): NextResponse<ApiErrorBody> {
   const body: ApiErrorBody = {
     error: {
@@ -33,5 +34,5 @@ export function jsonError(
       ...(error.details !== undefined ? { details: error.details } : {}),
     },
   };
-  return NextResponse.json(body, { status });
+  return NextResponse.json(body, { status, headers });
 }

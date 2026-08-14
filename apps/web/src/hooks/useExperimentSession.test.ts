@@ -63,12 +63,20 @@ describe("training-only wiring", () => {
     expect(runner).not.toMatch(/from ["']@\/hooks\/useFlowMachine["']/);
   });
 
-  it("completes via POST /api/sessions/[id]/score — not a skippable client status update", () => {
+  it("eager-scores via POST /api/sessions/[id]/score without a client status UPDATE", () => {
     const src = readFileSync(resolve(__dirname, "./useExperimentSession.ts"), "utf8");
     expect(src).toMatch(/\/api\/sessions\/\$\{sessionId\}\/score/);
     expect(src).not.toMatch(/status:\s*"completed"/);
     expect(src).not.toMatch(/from ["']@\/lib\/supabase\/admin["']/);
     expect(src).not.toMatch(/SUPABASE_SERVICE_ROLE_KEY/);
     expect(src).not.toMatch(/\/reflect/);
+  });
+
+  it("queues failed writes for remount retry instead of console.error-and-continue", () => {
+    const src = readFileSync(resolve(__dirname, "./useExperimentSession.ts"), "utf8");
+    expect(src).toMatch(/persistUnsaved/);
+    expect(src).toMatch(/enqueueInteraction/);
+    expect(src).toMatch(/flushQueuedInteractions/);
+    expect(src).not.toMatch(/console\.error/);
   });
 });

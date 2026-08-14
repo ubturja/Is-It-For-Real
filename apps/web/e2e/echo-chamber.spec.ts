@@ -142,4 +142,106 @@ test.describe("Echo Chamber experiment", () => {
     });
     await admin.from("flow_sessions").delete().eq("id", session.id);
   });
+
+  test("aborting POST /score still scores on the next /train visit", async ({
+    page,
+  }) => {
+    const { email, password } = requireE2EAccount();
+    const { url: supabaseUrl, anonKey } = requirePublicSupabaseEnv();
+    const serviceRoleKey = requireServiceRoleKey();
+
+    let clientScorePosts = 0;
+    await page.route("**/api/sessions/**/score", async (route) => {
+      if (route.request().method() === "POST") {
+        clientScorePosts += 1;
+        await route.abort("failed");
+        return;
+      }
+      await route.continue();
+    });
+
+    const grant = await loginViaPasswordUi(page, email, password, ECHO_PATH);
+
+    await expect(
+      page.getByText("A short feed — open what you would tap, then continue."),
+    ).toBeVisible();
+
+    const continueButton = page.getByRole("button", { name: "Continue" });
+    await page.getByRole("button", { name: SPORTS_HEADLINES[0] }).click();
+    await page.getByRole("button", { name: SPORTS_HEADLINES[1] }).click();
+    await page.getByRole("button", { name: SPORTS_HEADLINES[2] }).click();
+    await page.getByRole("button", { name: SPORTS_HEADLINES[3] }).click();
+    await page.getByRole("button", { name: SPORTS_HEADLINES[4] }).click();
+    await continueButton.click();
+
+    const owner = createClient(supabaseUrl, anonKey, {
+      auth: { persistSession: false, autoRefreshToken: false },
+    });
+    const { error: sessionError } = await owner.auth.setSession({
+      access_token: grant.access_token,
+      refresh_token: grant.refresh_token,
+    });
+    expect(sessionError).toBeNull();
+
+    const inProgress = await pollUntil(async () => {
+      const { data, error } = await owner
+        .from("flow_sessions")
+        .select("id, flow_id, status")
+        .eq("user_id", grant.user.id)
+        .eq("flow_id", ECHO_FLOW_ID)
+        .eq("status", "in_progress")
+        .order("started_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (error || !data) {
+        return null;
+      }
+      return data as SessionRow;
+    }, 15_000);
+
+    expect(inProgress.status).toBe("in_progress");
+
+    await pollUntil(async () => {
+      const { data, error } = await owner
+        .from("flow_interactions")
+        .select("id")
+        .eq("session_id", inProgress.id);
+      if (error || !data || data.length === 0) {
+        return null;
+      }
+      return data;
+    }, 15_000);
+
+    await page.goto("/train");
+    await expect(page.getByRole("heading", { name: "Train" })).toBeVisible();
+
+    const scored = await pollUntil(async () => {
+      const { data: session, error: sessionLookupError } = await owner
+        .from("flow_sessions")
+        .select("id, status")
+        .eq("id", inProgress.id)
+        .maybeSingle();
+      if (sessionLookupError || session?.status !== "completed") {
+        return null;
+      }
+      const { data: scores, error: scoreError } = await owner
+        .from("flow_scores")
+        .select("metric_name, metric_value")
+        .eq("session_id", inProgress.id);
+      if (scoreError || !scores || scores.length === 0) {
+        return null;
+      }
+      return scores as Array<{ metric_name: string; metric_value: number }>;
+    }, 15_000);
+
+    expect(clientScorePosts).toBeGreaterThan(0);
+    expect(scored).toHaveLength(1);
+    expect(scored[0]?.metric_name).toBe("perspective_diversity");
+    expect(scored[0]?.metric_value).toBe(0.25);
+
+    const admin = createClient(supabaseUrl, serviceRoleKey, {
+      auth: { persistSession: false, autoRefreshToken: false },
+    });
+    await admin.from("flow_sessions").delete().eq("id", inProgress.id);
+  });
 });

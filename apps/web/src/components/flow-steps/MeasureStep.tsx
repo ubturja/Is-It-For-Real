@@ -1,12 +1,14 @@
 "use client";
 
 import { getStepChrome } from "@isitfr/content-config";
+import { useEffect, useRef } from "react";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardFooter } from "@/components/ui/card";
 
 import { EchoChamberStep } from "./EchoChamberStep";
 import { isEchoFeedKind } from "./echoFeed";
+import { isSilentMeasurePrompt } from "./measurePassthrough";
 import { StepTypeHeader } from "./StepTypeHeader";
 import type { StepComponentProps } from "./types";
 
@@ -16,16 +18,46 @@ import type { StepComponentProps } from "./types";
  * `step.weight`. Pass a number to onAdvance only when the step is an
  * explicit rating (or echo-feed diversity).
  */
-export function MeasureStep({ step, onAdvance }: StepComponentProps) {
+export function MeasureStep({
+  step,
+  onAdvance,
+  autoAdvanceSilentMeasure,
+}: StepComponentProps) {
   if (isEchoFeedKind(step.payload)) {
     return <EchoChamberStep step={step} onAdvance={onAdvance} />;
   }
 
-  return <LinearMeasureStep step={step} onAdvance={onAdvance} />;
+  return (
+    <LinearMeasureStep
+      step={step}
+      onAdvance={onAdvance}
+      autoAdvanceSilentMeasure={autoAdvanceSilentMeasure}
+    />
+  );
 }
 
-function LinearMeasureStep({ step, onAdvance }: StepComponentProps) {
+function LinearMeasureStep({
+  step,
+  onAdvance,
+  autoAdvanceSilentMeasure,
+}: StepComponentProps) {
   const chrome = getStepChrome();
+  const silent =
+    autoAdvanceSilentMeasure === true &&
+    isSilentMeasurePrompt(step.prompt, chrome.actions.continue);
+  const advanced = useRef(false);
+
+  useEffect(() => {
+    if (!silent || advanced.current) {
+      return;
+    }
+    advanced.current = true;
+    onAdvance();
+  }, [silent, onAdvance]);
+
+  if (silent) {
+    return null;
+  }
 
   return (
     <Card>

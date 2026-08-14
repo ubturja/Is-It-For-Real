@@ -147,9 +147,8 @@ export async function completeReadTheRoom(page: Page): Promise<void> {
   await clickContinue(page);
 
   await pickBranchOption(page, "read-the-room", "first_reply", "verify");
-  await completeLinearMeasure(page);
+  await expect(page.getByText(flow.steps.who?.prompt ?? "")).toBeVisible();
   await pickBranchOption(page, "read-the-room", "who", "adult");
-  await completeLinearMeasure(page);
 
   await expect(
     page.getByText(flow.steps.template_group?.prompt ?? ""),

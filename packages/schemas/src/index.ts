@@ -18,6 +18,9 @@ export {
   ReportChromeSchema,
   validateReportChrome,
   type ReportChrome,
+  DashboardChromeSchema,
+  validateDashboardChrome,
+  type DashboardChrome,
 } from "./chrome";
 
 export {
@@ -25,15 +28,12 @@ export {
   ScoringRuleSchema,
   ScoringRulesSchema,
   FlowInteractionSchema,
-  PROFILE_DIMENSIONS,
-  ProfileDimensionSchema,
   AggregatedScoresSchema,
   validateScoringRule,
   validateScoringRules,
   type ScoringRule,
   type ScoringRules,
   type FlowInteraction,
-  type ProfileDimension,
   type AggregatedScores,
 } from "./scoring";
 
@@ -65,4 +65,20 @@ export {
   type PersonalizeTemplateResponse,
   type PersonalizeTemplatePrompt,
 } from "./personalize";
+
+export {
+  MessageTemplateSchema,
+  ResourceLinkSchema,
+  ResourceSetSchema,
+  FeedPostSchema,
+  FeedCatalogSchema,
+  validateMessageTemplate,
+  validateResourceSet,
+  validateFeedCatalog,
+  type MessageTemplate,
+  type ResourceLink,
+  type ResourceSet,
+  type FeedPost,
+  type FeedCatalog,
+} from "./contentAssets";
 

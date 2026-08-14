@@ -1,49 +1,21 @@
-import type { FlowConfig, ScoringRule, ScoringRules } from "@isitfr/schemas";
+import type {
+  FeedCatalog,
+  FeedPost,
+  FlowConfig,
+  MessageTemplate,
+  ResourceLink,
+  ResourceSet,
+  ScoringRule,
+  ScoringRules,
+} from "@isitfr/schemas";
 
-import crisisDeepfakeClassmateResources from "./resources/crisis-deepfake-classmate.json";
-import echoChamberFeed from "./feeds/echo-chamber.json";
-import trustedAdultEn from "./templates/crisis-deepfake-classmate-trusted-adult.en.json";
-import schoolContactEn from "./templates/crisis-deepfake-classmate-school-contact.en.json";
-import platformReportEn from "./templates/crisis-deepfake-classmate-platform-report.en.json";
-import readTheRoomGroupPauseEn from "./templates/read-the-room-group-pause.en.json";
+import { feedRegistry } from "./loadFeeds";
 import { flowRegistry } from "./loadFlows";
+import { resourceSetRegistry } from "./loadResources";
 import { scoringRuleRegistry } from "./loadScoringRules";
+import { messageTemplateRegistry } from "./loadTemplates";
 
 const DEFAULT_LOCALE = "en";
-
-export type MessageTemplate = {
-  key: string;
-  locale: string;
-  title?: string;
-  body: string;
-};
-
-export type ResourceLink = {
-  id: string;
-  title: string;
-  description: string;
-  url: string;
-};
-
-export type ResourceSet = {
-  key: string;
-  title: string;
-  description: string;
-  resources: ResourceLink[];
-};
-
-export type FeedPost = {
-  id: string;
-  topics: string[];
-  headline: string;
-  source: string;
-  body: string;
-};
-
-export type FeedCatalog = {
-  key: string;
-  items: FeedPost[];
-};
 
 /** Listing fields for the /train dashboard — never includes scoring spoilers. */
 export type ExperimentSummary = {
@@ -51,29 +23,6 @@ export type ExperimentSummary = {
   title: string;
   track: string;
   teaser: string;
-};
-
-/** key → locale → template */
-const messageTemplateRegistry: Record<
-  string,
-  Record<string, MessageTemplate>
-> = {
-  [trustedAdultEn.key]: { [trustedAdultEn.locale]: trustedAdultEn },
-  [schoolContactEn.key]: { [schoolContactEn.locale]: schoolContactEn },
-  [platformReportEn.key]: { [platformReportEn.locale]: platformReportEn },
-  [readTheRoomGroupPauseEn.key]: {
-    [readTheRoomGroupPauseEn.locale]: readTheRoomGroupPauseEn,
-  },
-};
-
-/** MVP: a single default resource set (no region variants yet). */
-const resourceSetRegistry: Record<string, ResourceSet> = {
-  [crisisDeepfakeClassmateResources.key]: crisisDeepfakeClassmateResources,
-};
-
-/** Feed datasets live under src/feeds — never inlined in flow JSON. */
-const feedRegistry: Record<string, FeedCatalog> = {
-  [echoChamberFeed.key]: echoChamberFeed,
 };
 
 /**
@@ -109,13 +58,15 @@ export function listFlows(filter?: {
  * Experiment cards for /train: title, track, teaser only (no metric spoilers).
  */
 export function listExperiments(): ExperimentSummary[] {
-  return listFlows({ type: "experiment" }).map((flow) => ({
-    flowId: flow.flowId,
-    title: flow.title,
-    // Schema requires these on experiment flows.
-    track: flow.track as string,
-    teaser: flow.teaser as string,
-  }));
+  return listFlows({ type: "experiment" })
+    .filter((flow) => flow.listed !== false)
+    .map((flow) => ({
+      flowId: flow.flowId,
+      title: flow.title,
+      // Schema requires these on experiment flows.
+      track: flow.track as string,
+      teaser: flow.teaser as string,
+    }));
 }
 
 export function hasMessageTemplate(key: string): boolean {
@@ -202,8 +153,22 @@ export function profileAggregationFor(
   return "average";
 }
 
-export type { FlowConfig, ScoringRules };
+export type {
+  FeedCatalog,
+  FeedPost,
+  FlowConfig,
+  MessageTemplate,
+  ResourceLink,
+  ResourceSet,
+  ScoringRules,
+};
 export { getStepChrome, stepChrome } from "./stepChrome";
 export { getProfileChrome, profileChrome } from "./profileChrome";
 export { getReportChrome, reportChrome } from "./reportChrome";
-export type { StepChrome, ProfileChrome, ReportChrome } from "@isitfr/schemas";
+export { getDashboardChrome, dashboardChrome } from "./dashboardChrome";
+export type {
+  StepChrome,
+  ProfileChrome,
+  ReportChrome,
+  DashboardChrome,
+} from "@isitfr/schemas";

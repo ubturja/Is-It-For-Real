@@ -6,8 +6,24 @@ import {
 
 import { jsonError, jsonSuccess } from "@/lib/api/response";
 import { personalizeTemplate } from "@/lib/crisis/personalizeTemplate";
+import {
+  PERSONALIZE_RATE_WINDOW_MS,
+  allowPersonalizeRequest,
+} from "@/lib/crisis/personalizeRateLimit";
 
 export async function POST(request: Request) {
+  if (!allowPersonalizeRequest(request)) {
+    return jsonError(
+      {
+        code: "rate_limited",
+        message: "Too many personalize requests. Try again in a minute.",
+      },
+      429,
+      {
+        "Retry-After": String(Math.ceil(PERSONALIZE_RATE_WINDOW_MS / 1000)),
+      },
+    );
+  }
   let raw: unknown;
   try {
     raw = await request.json();
@@ -39,10 +55,7 @@ export async function POST(request: Request) {
 
   let result;
   try {
-    result = await personalizeTemplate(
-      parsed.data.templateKey,
-      parsed.data.context,
-    );
+    result = await personalizeTemplate(parsed.data.templateKey);
   } catch (err) {
     const message =
       err instanceof Error ? err.message : "personalize failed";

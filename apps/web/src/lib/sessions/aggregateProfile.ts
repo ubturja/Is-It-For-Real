@@ -53,10 +53,9 @@ function isScoreRow(row: unknown): row is ScoreRow {
  * Recompute `profiles.aggregated_scores` from every completed session's
  * `flow_scores` for this user.
  *
- * Uses the service role to read scores / write the profile (same trusted
- * path as P6.2 score inserts). Phase 4 RLS still applies to clients:
- * `profiles_select_own` / `profiles_update_own` are `auth.uid() = user_id`,
- * so another authenticated user cannot read or write this row.
+ * Uses the service role to read scores / write `aggregated_scores`. Clients
+ * cannot change that column (trigger + column grants). RLS still limits
+ * `profiles_select_own` / `profiles_update_own` to `auth.uid() = user_id`.
  */
 export async function aggregateProfile(
   userId: string,

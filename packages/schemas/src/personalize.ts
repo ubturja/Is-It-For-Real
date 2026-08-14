@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-/** Bounded name only — never free-text instructions or a plan. */
+/** Bounded optional context — name is never forwarded to the model. */
 export const PersonalizeTemplateContextSchema = z
   .object({
     name: z.string().trim().min(1).max(80).optional(),
@@ -32,13 +32,12 @@ export type PersonalizeTemplateResponse = z.infer<
 >;
 
 /**
- * Payload the model is allowed to see: the already-fixed template body plus
- * optional name. Extra keys are rejected so this cannot become a planner.
+ * Payload the model is allowed to see: already-fixed template text with a
+ * neutral {{name}} token. User-typed names must never appear here.
  */
 export const PersonalizeTemplatePromptSchema = z
   .object({
     template: z.string().min(1),
-    context: PersonalizeTemplateContextSchema,
   })
   .strict();
 

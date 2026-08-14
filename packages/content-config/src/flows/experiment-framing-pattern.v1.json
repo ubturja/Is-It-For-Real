@@ -5,6 +5,7 @@
   "title": "Headline fork",
   "track": "Foundation",
   "teaser": "Read a short headline and pick the follow-up that feels right. A structural template for later experiments — not the finished Framing scenario.",
+  "listed": false,
   "initial": "headline",
   "steps": {
     "headline": {

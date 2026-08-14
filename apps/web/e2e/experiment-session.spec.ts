@@ -7,6 +7,7 @@ import {
   requirePublicSupabaseEnv,
   requireServiceRoleKey,
 } from "./helpers/auth";
+import { getStepChrome } from "./helpers/content";
 
 const STUB_PATH = "/train/experiment-stub";
 const STUB_FLOW_ID = "experiment-stub";
@@ -156,5 +157,60 @@ test.describe("Experiment session persistence", () => {
       }
       await admin.from("flow_sessions").delete().eq("id", session.id);
     }
+  });
+
+  test("a failed score write shows the persist notice and still lets the stub finish", async ({
+    page,
+  }) => {
+    const { email, password } = requireE2EAccount();
+    const unsaved = getStepChrome().persist.unsaved;
+
+    await page.route("**/api/sessions/**/score", async (route) => {
+      if (route.request().method() === "POST") {
+        await route.fulfill({
+          status: 500,
+          contentType: "application/json",
+          body: JSON.stringify({
+            error: { code: "simulated_write_failure", message: "broken" },
+          }),
+        });
+        return;
+      }
+      await route.continue();
+    });
+
+    await loginViaPasswordUi(page, email, password, STUB_PATH);
+
+    await expect(page.getByText("Measure", { exact: true })).toBeVisible();
+    await page.getByRole("button", { name: "Continue" }).click();
+    await expect(page.getByText("Stub complete.")).toBeVisible();
+    await expect(page.getByRole("status")).toHaveText(unsaved);
+  });
+
+  test("a failed session insert shows the persist notice without blocking advance", async ({
+    page,
+  }) => {
+    const { email, password } = requireE2EAccount();
+    const unsaved = getStepChrome().persist.unsaved;
+
+    await page.route("**/rest/v1/flow_sessions*", async (route) => {
+      if (route.request().method() === "POST") {
+        await route.fulfill({
+          status: 500,
+          contentType: "application/json",
+          body: JSON.stringify({ message: "simulated write failure" }),
+        });
+        return;
+      }
+      await route.continue();
+    });
+
+    await loginViaPasswordUi(page, email, password, STUB_PATH);
+
+    await expect(page.getByText("Measure", { exact: true })).toBeVisible();
+    await expect(page.getByRole("status")).toHaveText(unsaved);
+    await page.getByRole("button", { name: "Continue" }).click();
+    await expect(page.getByText("Stub complete.")).toBeVisible();
+    await expect(page.getByRole("status")).toHaveText(unsaved);
   });
 });

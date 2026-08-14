@@ -53,4 +53,14 @@ describe("jsonError", () => {
       },
     });
   });
+
+  it("forwards optional headers such as Retry-After", () => {
+    const response = jsonError(
+      { code: "rate_limited", message: "Too many requests" },
+      429,
+      { "Retry-After": "60" },
+    );
+    expect(response.status).toBe(429);
+    expect(response.headers.get("Retry-After")).toBe("60");
+  });
 });

@@ -35,4 +35,11 @@ describe("ReflectionReport", () => {
     expect(runner).toMatch(/ReflectionReport/);
     expect(runner).toMatch(/showReport/);
   });
+
+  it("surfaces persistUnsaved from chrome, never as hardcoded copy", () => {
+    expect(runner).toMatch(/persistUnsaved/);
+    expect(runner).toMatch(/getStepChrome/);
+    expect(runner).toMatch(/chrome\.persist\.unsaved/);
+    expect(runner).not.toMatch(/may not have saved/i);
+  });
 });

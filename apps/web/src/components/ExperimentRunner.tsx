@@ -1,6 +1,7 @@
 "use client";
 
-import { getFlow, hasScoringRules } from "@isitfr/content-config";
+import { getFlow, getStepChrome, hasScoringRules } from "@isitfr/content-config";
+import type { ReactNode } from "react";
 
 import { ChatBubbleTheme } from "@/components/ChatBubbleTheme";
 import { ReflectionReport } from "@/components/ReflectionReport";
@@ -19,28 +20,65 @@ export type ExperimentRunnerProps = {
  * After a scored run, the reflection report replaces the terminal step.
  */
 export function ExperimentRunner({ flowId }: ExperimentRunnerProps) {
-  const { step, currentStepId, onAdvance, done, sessionId, scoreStatus } =
-    useExperimentSession(flowId);
+  const {
+    step,
+    currentStepId,
+    onAdvance,
+    done,
+    sessionId,
+    scoreStatus,
+    persistUnsaved,
+  } = useExperimentSession(flowId);
   const skin = getFlow(flowId).skin;
   const showReport = done && hasScoringRules(flowId);
 
   if (showReport) {
     return (
-      <ReflectionReport sessionId={sessionId} scoreStatus={scoreStatus} />
+      <PersistNotice visible={persistUnsaved}>
+        <ReflectionReport sessionId={sessionId} scoreStatus={scoreStatus} />
+      </PersistNotice>
     );
   }
 
   if (!step || !currentStepId) {
-    return null;
+    return persistUnsaved ? <PersistNotice visible /> : null;
   }
 
   const renderer = (
-    <StepRenderer key={currentStepId} step={step} onAdvance={onAdvance} />
+    <StepRenderer
+      key={currentStepId}
+      step={step}
+      onAdvance={onAdvance}
+      autoAdvanceSilentMeasure={skin === "chat-bubble"}
+    />
   );
 
-  if (skin === "chat-bubble") {
-    return <ChatBubbleTheme>{renderer}</ChatBubbleTheme>;
-  }
+  const framed =
+    skin === "chat-bubble" ? (
+      <ChatBubbleTheme>{renderer}</ChatBubbleTheme>
+    ) : (
+      renderer
+    );
 
-  return renderer;
+  return <PersistNotice visible={persistUnsaved}>{framed}</PersistNotice>;
+}
+
+function PersistNotice({
+  visible,
+  children,
+}: {
+  visible: boolean;
+  children?: ReactNode;
+}) {
+  const chrome = getStepChrome();
+  return (
+    <>
+      {visible ? (
+        <p className="text-muted-foreground px-4 pt-4 text-sm" role="status">
+          {chrome.persist.unsaved}
+        </p>
+      ) : null}
+      {children}
+    </>
+  );
 }

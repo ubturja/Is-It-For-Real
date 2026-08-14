@@ -3,8 +3,9 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { describe, expect, it } from "vitest";
-import { validateScoringRules } from "@isitfr/schemas";
+import { validateScoringRules, type FlowConfig } from "@isitfr/schemas";
 
+import { assertNormalizeToRangeMatchesWeights } from "./assertNormalizeToRangeMatchesWeights";
 import { getFlow, getScoringRules, profileAggregationFor } from "./index";
 
 const SRC_DIR = dirname(fileURLToPath(import.meta.url));
@@ -72,7 +73,74 @@ describe("scoring-rules JSON", () => {
           `${entry.file} has no rule for MEASURE metric "${metric}" on ${entry.flowId}`,
         ).toBe(true);
       }
+
+      expect(() =>
+        assertNormalizeToRangeMatchesWeights(getFlow(entry.flowId), rules),
+      ).not.toThrow();
     }
+  });
+
+  it("fails when normalizeToRange does not match MEASURE min/max weights", () => {
+    const mismatched: FlowConfig = {
+      flowId: "framing-mismatch",
+      version: 1,
+      type: "experiment",
+      title: "Mismatch",
+      track: "Framing",
+      teaser: "Fixture",
+      initial: "measure_political",
+      steps: {
+        measure_neutral: {
+          type: "MEASURE",
+          prompt: "n",
+          metric: "framing_bias",
+          weight: 0,
+        },
+        measure_emotional: {
+          type: "MEASURE",
+          prompt: "e",
+          metric: "framing_bias",
+          weight: 1,
+        },
+        measure_political: {
+          type: "MEASURE",
+          prompt: "p",
+          metric: "framing_bias",
+          weight: 2,
+        },
+      },
+    };
+    const rules = validateScoringRules([
+      {
+        metric: "framing_bias",
+        aggregation: "last",
+        normalizeToRange: [0, 1],
+        description: "Reintroduced 0/1/2 vs [0,1] mismatch",
+      },
+    ]);
+    expect(() =>
+      assertNormalizeToRangeMatchesWeights(mismatched, rules),
+    ).toThrow(/normalizeToRange \[0, 1\] does not match MEASURE weights \[0, 2\]/);
+
+    const fixed: FlowConfig = {
+      ...mismatched,
+      steps: {
+        ...mismatched.steps,
+        measure_emotional: {
+          type: "MEASURE",
+          prompt: "e",
+          metric: "framing_bias",
+          weight: 0.5,
+        },
+        measure_political: {
+          type: "MEASURE",
+          prompt: "p",
+          metric: "framing_bias",
+          weight: 1,
+        },
+      },
+    };
+    expect(() => assertNormalizeToRangeMatchesWeights(fixed, rules)).not.toThrow();
   });
 
   it("throws for an unknown flowId", () => {

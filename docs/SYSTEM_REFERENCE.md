@@ -15,9 +15,19 @@ AI-generated reflection report → profile builds over time.
 **Crisis path** (`/help`, no account, ever): one tap → five fixed steps (stop,
 preserve evidence, choose who to tell, send a template message, get resources) →
 leave. No score. No login. Completing Crisis Mode never writes a Supabase row.
+
 The canned template and resources are always available offline after first
-load. Optional online rewording (Phase 7) may POST already-fixed copy and
-falls back to the canned template when the network or model is unavailable.
+load. Completing the five steps never requires a network call.
+
+**Optional template rewording (the only Crisis network exception):** after the
+static template is on screen, an explicit tap ("Make this sound more like me")
+may `POST /api/crisis/personalize-template` with the **template key only**. The
+server sends the already-fixed canned body to the model, with name slots
+replaced by a `{{name}}` token — never the user-typed name (that substitution
+stays on-device). The model may only reword that copy; it does not invent
+steps, advice, or resources. If the user is offline, the request fails, or the
+model is unavailable, the UI keeps the canned template. The route is
+rate-limited. This path is never required to finish Crisis Mode.
 
 ## 3. Current scope
 Phases 1–8 are in this tree: shared engine, Crisis Mode (standalone, offline
@@ -25,6 +35,16 @@ after first load), four scored experiments, analytics, AI reflection /
 optional template rewording, Playwright journeys, a11y, and Vercel deploy of
 `apps/web` only. Flow configs remain static JSON under
 `packages/content-config` (not CMS tables). `apps/edge-api` stays parked.
+
+**Memory experiment clip (locked for this MVP):** `memory-recall` plays the
+MDN interactive-examples **CC0 flower** clip, not original or news-style
+footage. The BRANCH options are written against that file (petal color;
+close-up bloom vs a bee/garden confabulation), so the MEASURE diamond still
+scores accurate vs misleading recall. That is enough for demo and submission.
+It is **not** a topical misinformation clip. Replace with a short,
+clearly-licensed mock news-style video (original or equivalently licensed)
+before a wider public release — do not swap in an unvetted hotlink just to
+look like news.
 
 ## 4. Shared Step Schema — the core contract
 This is the single most important design decision in the system. Every flow —
@@ -105,14 +125,24 @@ the shared step contract.
 
 **Flow skin (presentation only):** optional `skin: "chat-bubble"` restyles
 `StepRenderer` output. The engine and `compileFlowToMachine` ignore it. It
-is not a step type.
+is not a step type. On that skin, a MEASURE whose prompt is only the shared
+Continue chrome auto-advances (no card); recording is the same `NEXT` as a
+tap.
 
 ### BRANCH choices and scoring (locked decision)
 
 **Decision: (a) — encode the choice in the flow graph.** Each BRANCH option
 that should affect a score routes to its own downstream MEASURE step with a
-fixed `metric` and `step.weight`. The path taken *is* the score. Phase 6
-reads `context.measurements` only.
+fixed `metric` and `step.weight`. The path taken *is* the score.
+
+**Phase 6 data path (locked):** the live XState machine still records
+`{ metric, value }` on `context.measurements` during the run. Durable scoring
+does **not** read that in-memory context. The client persists MEASURE rows to
+`flow_interactions` (`step_id`, `choice_value`). `POST /api/sessions/[id]/score`
+loads those rows and remaps them through the compiled flow JSON: a MEASURE
+step's `metric` plus a numeric `choice_value` that must already be a legitimate
+weight (or range) declared for that step. BRANCH rows are ignored. Values
+outside the declared set are dropped, not written to `flow_scores`.
 
 **Not (b).** The engine does **not** write BRANCH option values into
 `context.answers`. That field stays empty for scoring. Crisis Mode still
@@ -195,7 +225,7 @@ flowchart TB
         PG[("PostgreSQL")]
         RLS["Row-Level Security"]
     end
-    subgraph AI["AI Layer (Phase 7)"]
+    subgraph AI["AI Layer (Phase 7 — built)"]
         SDK["Vercel AI SDK"]
         MODEL["GPT-4o-mini"]
     end
@@ -228,8 +258,13 @@ flowchart LR
 1. No hardcoded step sequences, scenario copy, resource lists, or step chrome in components — always from `packages/content-config` via a typed loader. **Extensibility is glob discovery, not a manual registry:** add a flow by dropping a valid `{flowId}.v{version}.json` into `src/flows/`; `@isitfr/content-config` enumerates `*.v*.json` at module init (`import.meta.glob` / webpack `require.context` / Node `fs`) and `getFlow` / `listExperiments` read that map. Do not add a per-flow import or registry entry. Step chrome is per-step-type defaults in `src/chrome/stepChrome.en.json` (see §4).
 2. Exactly one schema definition (`packages/schemas`) — never redefine flow/step shapes locally.
 3. `packages/engine` is framework-agnostic — no React, no Supabase, importable by `apps/web` and the parked `apps/edge-api`.
-4. Crisis Mode (`/help`) must work with zero network calls after first load, and zero auth requirement, forever.
-5. Deterministic scoring stays separate from the LLM — the model never generates the sequence of safety steps, only rewords already-fixed content (relevant from Phase 7 on).
+4. Crisis Mode (`/help`) must work with zero auth, forever, and with zero
+   network calls after first load **except** the optional personalize tap in
+   §2. Completing Crisis Mode must never depend on that request.
+5. Deterministic scoring stays separate from the LLM — the model never
+   generates the sequence of safety steps, only rewords already-fixed content
+   (Crisis template personalize) or describes already-computed scores
+   (training reflection).
 6. RLS is default-deny; permissive policies are added explicitly, one at a time, as auth is wired.
 7. Strict TypeScript, no `any`.
 
@@ -252,10 +287,12 @@ Each file is an array of `ScoringRule` objects (`packages/schemas` —
 `normalizeToRange` `[low, high]`, `description`.
 
 A rule only says how to **combine** observations already recorded on that
-flow. `metric` must name a MEASURE step's `metric` in the matching flow JSON.
-Rules do not declare new measurements, weights, or step sequences. Phase 6
-reads `context.measurements` plus these rules; it does not look up BRANCH
-answers (§4).
+flow. `metric` **must already exist** on a MEASURE step in the matching flow
+JSON — scoring-rules cannot invent measurements, weights, or step sequences.
+A rule that names a metric the flow never emits is invalid (caught at load /
+test), not a silent extra score. Phase 6 applies these rules to MEASURE
+`flow_interactions` remapped through that flow JSON (§4); it does not look up
+BRANCH answers.
 
 After a session's `flow_scores` are written, `aggregateProfile(userId)`
 recomputes `profiles.aggregated_scores` from **all** of that user's completed

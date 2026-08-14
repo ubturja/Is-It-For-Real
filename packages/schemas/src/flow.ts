@@ -117,6 +117,9 @@ export const FlowConfigSchema = z
     // Presentation only — ignored by the engine. "chat-bubble" restyles
     // StepRenderer output; it is not a step type.
     skin: z.enum(["chat-bubble"]).optional(),
+    // Dashboard listing. Omitted → listed. Dev stubs set false so /train
+    // only shows real scored experiments; getFlow still loads them.
+    listed: z.boolean().optional(),
     initial: z.string(),
     steps: z.record(z.string(), StepSchema), // keyed dynamically — no hardcoded step list anywhere
   })

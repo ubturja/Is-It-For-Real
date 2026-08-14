@@ -44,19 +44,9 @@ export const FlowInteractionSchema = z.object({
 
 export type FlowInteraction = z.infer<typeof FlowInteractionSchema>;
 
-/** Profile dimensions rolled into `profiles.aggregated_scores`. */
-export const PROFILE_DIMENSIONS = [
-  "framing_bias",
-  "perspective_diversity",
-  "memory_reliability",
-  "deepfake_resilience",
-] as const;
-
-export const ProfileDimensionSchema = z.enum(PROFILE_DIMENSIONS);
 /** Open record so a future experiment's metric is stored and rendered without a schema change. */
 export const AggregatedScoresSchema = z.record(z.string().min(1), z.number());
 
-export type ProfileDimension = z.infer<typeof ProfileDimensionSchema>;
 export type AggregatedScores = z.infer<typeof AggregatedScoresSchema>;
 
 function formatZodIssues(error: z.ZodError): string {
