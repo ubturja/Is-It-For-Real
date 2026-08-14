@@ -81,14 +81,14 @@
       "type": "MEASURE",
       "prompt": "Continue.",
       "metric": "framing_bias",
-      "weight": 1,
+      "weight": 0.5,
       "next": "done"
     },
     "measure_political": {
       "type": "MEASURE",
       "prompt": "Continue.",
       "metric": "framing_bias",
-      "weight": 2,
+      "weight": 1,
       "next": "done"
     },
     "done": {

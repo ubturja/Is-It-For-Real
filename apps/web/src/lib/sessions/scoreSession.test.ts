@@ -9,13 +9,13 @@ describe("toFlowInteractions", () => {
     expect(
       toFlowInteractions(
         [
-          { step_id: "measure_emotional", choice_value: "1" },
+          { step_id: "measure_emotional", choice_value: "0.5" },
           { step_id: "compare", choice_value: "emotional_share" },
           { step_id: "measure_emotional", choice_value: "not-a-number" },
         ],
         flow,
       ),
-    ).toEqual([{ metric: "framing_bias", value: 1 }]);
+    ).toEqual([{ metric: "framing_bias", value: 0.5 }]);
   });
 });
 
@@ -23,9 +23,21 @@ describe("scoresForSession", () => {
   it("scores each Phase 5 experiment from its MEASURE rows and rules", () => {
     expect(
       scoresForSession("framing-headlines", [
-        { step_id: "measure_political", choice_value: "2" },
+        { step_id: "measure_neutral", choice_value: "0" },
       ]),
-    ).toEqual({ framing_bias: 2 });
+    ).toEqual({ framing_bias: 0 });
+
+    expect(
+      scoresForSession("framing-headlines", [
+        { step_id: "measure_emotional", choice_value: "0.5" },
+      ]),
+    ).toEqual({ framing_bias: 0.5 });
+
+    expect(
+      scoresForSession("framing-headlines", [
+        { step_id: "measure_political", choice_value: "1" },
+      ]),
+    ).toEqual({ framing_bias: 1 });
 
     expect(
       scoresForSession("echo-chamber", [
@@ -46,5 +58,26 @@ describe("scoresForSession", () => {
         { step_id: "measure_adult", choice_value: "1" },
       ]),
     ).toEqual({ deepfake_resilience: 1 });
+  });
+
+  it("excludes an out-of-range MEASURE choice_value instead of writing it to scores", () => {
+    expect(
+      scoresForSession("framing-headlines", [
+        { step_id: "measure_political", choice_value: "999" },
+      ]),
+    ).toEqual({ framing_bias: 0 });
+
+    expect(
+      scoresForSession("framing-headlines", [
+        { step_id: "measure_emotional", choice_value: "0.5" },
+        { step_id: "measure_political", choice_value: "999" },
+      ]),
+    ).toEqual({ framing_bias: 0.5 });
+
+    expect(
+      scoresForSession("echo-chamber", [
+        { step_id: "perspective_diversity", choice_value: "9" },
+      ]),
+    ).toEqual({ perspective_diversity: 0 });
   });
 });

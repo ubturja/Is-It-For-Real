@@ -6,6 +6,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
+import { applyLocalName } from "@/lib/crisis/namePlaceholder";
 import {
   PERSONALIZE_CLIENT_TIMEOUT_MS,
   requestPersonalizedTemplate,
@@ -14,13 +15,13 @@ import {
 import { StepTypeHeader } from "./StepTypeHeader";
 import type { StepComponentProps } from "./types";
 
-const NAME_DEBOUNCE_MS = 400;
-
 export function TemplateStep({ step, onAdvance }: StepComponentProps) {
   const chrome = getStepChrome();
   const [copied, setCopied] = useState(false);
   const [name, setName] = useState("");
-  const [debouncedName, setDebouncedName] = useState("");
+  const [online, setOnline] = useState(
+    () => typeof navigator === "undefined" || navigator.onLine,
+  );
 
   const template = useMemo(() => {
     if (!step.templateKey) {
@@ -33,41 +34,40 @@ export function TemplateStep({ step, onAdvance }: StepComponentProps) {
     }
   }, [step.templateKey]);
 
-  const [displayedBody, setDisplayedBody] = useState<string | null>(
-    template?.body ?? null,
-  );
+  const [rewrittenBody, setRewrittenBody] = useState<string | null>(null);
 
   useEffect(() => {
-    setDisplayedBody(template?.body ?? null);
+    setRewrittenBody(null);
   }, [template?.body]);
 
   useEffect(() => {
-    const timer = window.setTimeout(() => {
-      setDebouncedName(name.trim());
-    }, NAME_DEBOUNCE_MS);
-    return () => window.clearTimeout(timer);
-  }, [name]);
+    function syncOnline() {
+      setOnline(navigator.onLine);
+    }
+    window.addEventListener("online", syncOnline);
+    window.addEventListener("offline", syncOnline);
+    return () => {
+      window.removeEventListener("online", syncOnline);
+      window.removeEventListener("offline", syncOnline);
+    };
+  }, []);
 
-  useEffect(() => {
-    if (!template) {
+  const sourceBody = rewrittenBody ?? template?.body ?? "";
+  const displayedBody = applyLocalName(sourceBody, name);
+
+  const onPersonalize = useCallback(() => {
+    if (!template || !navigator.onLine) {
       return;
     }
-    if (typeof navigator !== "undefined" && navigator.onLine === false) {
-      return;
-    }
-
     const controller = new AbortController();
     const timer = window.setTimeout(
       () => controller.abort(),
       PERSONALIZE_CLIENT_TIMEOUT_MS,
     );
-    const context =
-      debouncedName.length > 0 ? { name: debouncedName } : {};
-
-    void requestPersonalizedTemplate(template.key, context, controller.signal)
+    void requestPersonalizedTemplate(template.key, controller.signal)
       .then((result) => {
         if (!controller.signal.aborted) {
-          setDisplayedBody(result.body);
+          setRewrittenBody(result.body);
         }
       })
       .catch(() => {
@@ -76,12 +76,7 @@ export function TemplateStep({ step, onAdvance }: StepComponentProps) {
       .finally(() => {
         window.clearTimeout(timer);
       });
-
-    return () => {
-      controller.abort();
-      window.clearTimeout(timer);
-    };
-  }, [debouncedName, template]);
+  }, [template]);
 
   const onCopy = useCallback(async () => {
     if (!displayedBody || typeof navigator === "undefined") {
@@ -122,7 +117,7 @@ export function TemplateStep({ step, onAdvance }: StepComponentProps) {
               />
             </div>
             <div className="bg-muted rounded-lg p-3 text-sm whitespace-pre-wrap">
-              {displayedBody ?? template.body}
+              {displayedBody}
             </div>
           </>
         ) : (
@@ -132,6 +127,14 @@ export function TemplateStep({ step, onAdvance }: StepComponentProps) {
         )}
       </CardContent>
       <CardFooter className="flex flex-wrap gap-2">
+        <Button
+          type="button"
+          variant="outline"
+          disabled={!template || !online}
+          onClick={onPersonalize}
+        >
+          {chrome.stepTypes.TEMPLATE.personalize}
+        </Button>
         <Button
           type="button"
           variant="outline"

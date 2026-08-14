@@ -50,21 +50,25 @@ describe("validatePersonalizeTemplateRequest", () => {
 });
 
 describe("PersonalizeTemplatePromptSchema", () => {
-  it("only allows the fixed template plus optional name", () => {
+  it("only allows the fixed template string — no name, no planner keys", () => {
     expect(
       PersonalizeTemplatePromptSchema.parse({
-        template: "Hi [name], I need help.",
-        context: { name: "Alex" },
+        template: "Hi {{name}}, I need help.",
       }),
     ).toEqual({
-      template: "Hi [name], I need help.",
-      context: { name: "Alex" },
+      template: "Hi {{name}}, I need help.",
     });
 
     expect(() =>
       PersonalizeTemplatePromptSchema.parse({
-        template: "Hi [name], I need help.",
-        context: {},
+        template: "Hi {{name}}, I need help.",
+        context: { name: "Alex" },
+      }),
+    ).toThrow(/Unrecognized key/i);
+
+    expect(() =>
+      PersonalizeTemplatePromptSchema.parse({
+        template: "Hi {{name}}, I need help.",
         steps: ["stop", "report"],
       }),
     ).toThrow(/Unrecognized key/i);

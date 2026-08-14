@@ -8,7 +8,8 @@
     "TEMPLATE": {
       "titleFallback": "Message template",
       "nameLabel": "A name to include (optional)",
-      "namePlaceholder": "Name"
+      "namePlaceholder": "Name",
+      "personalize": "Make this sound more like me"
     },
     "RESOURCES": {
       "eyebrow": "Done for now",
@@ -25,5 +26,8 @@
     "open": "Open",
     "copy": "Copy to clipboard",
     "copied": "Copied"
+  },
+  "persist": {
+    "unsaved": "Your progress may not have saved. We'll keep trying."
   }
 }

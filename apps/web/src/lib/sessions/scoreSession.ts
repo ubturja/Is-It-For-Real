@@ -1,6 +1,11 @@
 import { computeScores } from "@isitfr/analytics";
 import { getFlow, getScoringRules } from "@isitfr/content-config";
-import type { FlowConfig, FlowInteraction } from "@isitfr/schemas";
+import type { FlowConfig, FlowInteraction, ScoringRules } from "@isitfr/schemas";
+
+import {
+  isDeclaredMeasureChoice,
+  measureChoiceDomain,
+} from "@/lib/sessions/declaredMeasureValues";
 
 type InteractionRow = {
   step_id: string;
@@ -14,6 +19,7 @@ type InteractionRow = {
 export function toFlowInteractions(
   rows: InteractionRow[],
   flow: FlowConfig,
+  rules: ScoringRules = [],
 ): FlowInteraction[] {
   const interactions: FlowInteraction[] = [];
 
@@ -32,6 +38,10 @@ export function toFlowInteractions(
     if (!Number.isFinite(value)) {
       continue;
     }
+    const domain = measureChoiceDomain(flow, row.step_id, rules);
+    if (!isDeclaredMeasureChoice(domain, value)) {
+      continue;
+    }
     interactions.push({ metric: step.metric, value });
   }
 
@@ -44,5 +54,5 @@ export function scoresForSession(
 ): Record<string, number> {
   const flow = getFlow(flowId);
   const rules = getScoringRules(flowId);
-  return computeScores(toFlowInteractions(rows, flow), rules);
+  return computeScores(toFlowInteractions(rows, flow, rules), rules);
 }

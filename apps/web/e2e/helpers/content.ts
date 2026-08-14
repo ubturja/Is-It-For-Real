@@ -50,10 +50,11 @@ export type StepChromeFile = {
     PRESERVE: { title: string };
     BRANCH: { title: string };
     MEASURE: { title: string };
-    TEMPLATE: { titleFallback: string };
+    TEMPLATE: { titleFallback: string; nameLabel: string; personalize: string };
     RESOURCES: { eyebrow: string; titleFallback: string };
   };
   actions: { continue: string; finish: string };
+  persist: { unsaved: string };
 };
 
 export type FeedFile = {

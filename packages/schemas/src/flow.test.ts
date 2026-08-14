@@ -182,6 +182,30 @@ describe("validateFlowConfig", () => {
     });
     expect(ok.track).toBe("Foundation");
     expect(ok.teaser).toBe("Jump in without knowing what is measured.");
+    expect(ok.listed).toBeUndefined();
+  });
+
+  it("accepts listed: false so dev stubs can stay off the dashboard", () => {
+    const unlisted = validateFlowConfig({
+      flowId: "dev-stub",
+      version: 1,
+      type: "experiment",
+      title: "Dev stub",
+      track: "Foundation",
+      teaser: "Not on the dashboard.",
+      listed: false,
+      initial: "probe",
+      steps: {
+        probe: {
+          type: "MEASURE",
+          prompt: "Probe",
+          metric: "stub_signal",
+          next: "done",
+        },
+        done: { type: "STOP", prompt: "Done" },
+      },
+    });
+    expect(unlisted.listed).toBe(false);
   });
 
   it("accepts optional chat-bubble skin and ignores it for crisis-shaped configs", () => {

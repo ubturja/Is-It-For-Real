@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { validateReportChrome, validateStepChrome } from "./chrome";
+import { validateDashboardChrome, validateReportChrome, validateStepChrome } from "./chrome";
 
 describe("validateStepChrome", () => {
   it("rejects chrome missing STOP title", () => {
@@ -49,5 +49,17 @@ describe("validateReportChrome", () => {
         back: "Back to scenarios",
       }),
     ).toThrow(/regenerate/i);
+  });
+});
+
+describe("validateDashboardChrome", () => {
+  it("rejects chrome missing the intro", () => {
+    expect(() =>
+      validateDashboardChrome({
+        locale: "en",
+        title: "Train",
+        profile: "Your profile",
+      }),
+    ).toThrow(/intro/i);
   });
 });

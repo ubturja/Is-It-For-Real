@@ -15,6 +15,7 @@ export const StepChromeSchema = z.object({
       titleFallback: z.string(),
       nameLabel: z.string(),
       namePlaceholder: z.string(),
+      personalize: z.string().min(1),
     }),
     RESOURCES: z.object({
       eyebrow: z.string(),
@@ -31,6 +32,9 @@ export const StepChromeSchema = z.object({
     open: z.string(),
     copy: z.string(),
     copied: z.string(),
+  }),
+  persist: z.object({
+    unsaved: z.string().min(1),
   }),
 });
 
@@ -66,6 +70,16 @@ export const ReportChromeSchema = z.object({
 
 export type ReportChrome = z.infer<typeof ReportChromeSchema>;
 
+/** Train dashboard chrome — listing copy, not per-experiment teasers. */
+export const DashboardChromeSchema = z.object({
+  locale: z.string(),
+  title: z.string().min(1),
+  intro: z.string().min(1),
+  profile: z.string().min(1),
+});
+
+export type DashboardChrome = z.infer<typeof DashboardChromeSchema>;
+
 function formatZodIssues(error: z.ZodError): string {
   return error.issues
     .map((issue) => {
@@ -95,6 +109,14 @@ export function validateReportChrome(json: unknown): ReportChrome {
   const result = ReportChromeSchema.safeParse(json);
   if (!result.success) {
     throw new Error(`Invalid ReportChrome:\n${formatZodIssues(result.error)}`);
+  }
+  return result.data;
+}
+
+export function validateDashboardChrome(json: unknown): DashboardChrome {
+  const result = DashboardChromeSchema.safeParse(json);
+  if (!result.success) {
+    throw new Error(`Invalid DashboardChrome:\n${formatZodIssues(result.error)}`);
   }
   return result.data;
 }

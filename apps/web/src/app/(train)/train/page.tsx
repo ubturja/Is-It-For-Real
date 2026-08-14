@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { listExperiments } from "@isitfr/content-config";
+import { getDashboardChrome, listExperiments } from "@isitfr/content-config";
 
 import {
   Card,
@@ -14,24 +14,24 @@ import {
  */
 export default function TrainPage() {
   const experiments = listExperiments();
+  const chrome = getDashboardChrome();
 
   return (
     <main className="mx-auto max-w-5xl px-4 py-8">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <h1 className="font-heading text-3xl font-medium tracking-tight">
-            Train
+            {chrome.title}
           </h1>
           <p className="text-muted-foreground mt-2 max-w-2xl text-sm">
-            Pick a scenario and go through it without knowing what is being
-            measured.
+            {chrome.intro}
           </p>
         </div>
         <Link
           href="/train/profile"
           className="text-sm font-medium underline-offset-4 hover:underline"
         >
-          Your profile
+          {chrome.profile}
         </Link>
       </div>
 

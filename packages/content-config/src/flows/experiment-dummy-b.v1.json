@@ -5,6 +5,7 @@
   "title": "Dummy experiment B",
   "track": "Foundation",
   "teaser": "Another placeholder scenario for the train dashboard.",
+  "listed": false,
   "initial": "probe",
   "steps": {
     "probe": {

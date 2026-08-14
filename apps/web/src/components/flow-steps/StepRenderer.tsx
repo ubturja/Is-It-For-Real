@@ -11,12 +11,17 @@ import type { OnAdvance } from "./types";
 export type StepRendererProps = {
   step: Step;
   onAdvance: OnAdvance;
+  autoAdvanceSilentMeasure?: boolean;
 };
 
 /**
  * Sole app-level switch on step.type. Step components themselves never branch on type.
  */
-export function StepRenderer({ step, onAdvance }: StepRendererProps) {
+export function StepRenderer({
+  step,
+  onAdvance,
+  autoAdvanceSilentMeasure,
+}: StepRendererProps) {
   switch (step.type) {
     case "STOP":
       return <StopStep step={step} onAdvance={onAdvance} />;
@@ -29,7 +34,13 @@ export function StepRenderer({ step, onAdvance }: StepRendererProps) {
     case "RESOURCES":
       return <ResourcesStep step={step} onAdvance={onAdvance} />;
     case "MEASURE":
-      return <MeasureStep step={step} onAdvance={onAdvance} />;
+      return (
+        <MeasureStep
+          step={step}
+          onAdvance={onAdvance}
+          autoAdvanceSilentMeasure={autoAdvanceSilentMeasure}
+        />
+      );
     default: {
       const _exhaustive: never = step.type;
       return _exhaustive;

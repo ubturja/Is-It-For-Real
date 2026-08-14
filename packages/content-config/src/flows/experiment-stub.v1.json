@@ -5,6 +5,7 @@
   "title": "Experiment stub",
   "track": "Foundation",
   "teaser": "A short interactive scenario. Jump in without knowing what is measured.",
+  "listed": false,
   "initial": "probe",
   "steps": {
     "probe": {

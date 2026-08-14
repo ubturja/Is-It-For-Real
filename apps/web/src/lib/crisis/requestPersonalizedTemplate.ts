@@ -1,6 +1,5 @@
 import {
   PersonalizeTemplateResponseSchema,
-  type PersonalizeTemplateContext,
   type PersonalizeTemplateResponse,
 } from "@isitfr/schemas";
 
@@ -9,13 +8,12 @@ export const PERSONALIZE_CLIENT_TIMEOUT_MS = 6_000;
 
 export async function requestPersonalizedTemplate(
   templateKey: string,
-  context: PersonalizeTemplateContext,
   signal?: AbortSignal,
 ): Promise<PersonalizeTemplateResponse> {
   const response = await fetch(PERSONALIZE_TEMPLATE_PATH, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ templateKey, context }),
+    body: JSON.stringify({ templateKey }),
     signal,
   });
   const body: unknown = await readJson(response);
