@@ -106,7 +106,7 @@ export function LoginForm({ nextPath, initialError }: LoginFormProps) {
   return (
     <Card className="w-full max-w-md">
       <CardHeader>
-        <CardTitle className="text-xl">
+        <CardTitle className="text-xl" role="heading" aria-level={1}>
           {mode === "signin" ? "Sign in" : "Create account"}
         </CardTitle>
         <CardDescription>

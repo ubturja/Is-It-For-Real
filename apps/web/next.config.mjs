@@ -1,3 +1,5 @@
+import path from "node:path";
+import { fileURLToPath } from "node:url";
 import withSerwistInit from "@serwist/next";
 import {
   copyCrisisContentToPublic,
@@ -6,6 +8,8 @@ import {
 } from "./scripts/crisis-offline-content.mjs";
 
 copyCrisisContentToPublic();
+
+const repoRoot = path.join(path.dirname(fileURLToPath(import.meta.url)), "../..");
 
 const withSerwist = withSerwistInit({
   swSrc: "src/app/sw.ts",
@@ -40,9 +44,12 @@ const withSerwist = withSerwistInit({
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // Monorepo: include workspace packages outside apps/web in serverless traces.
+  outputFileTracingRoot: repoRoot,
   transpilePackages: [
     "@isitfr/schemas",
     "@isitfr/engine",
+    "@isitfr/analytics",
     "@isitfr/content-config",
   ],
   webpack: (config) => {
@@ -51,7 +58,7 @@ const nextConfig = {
     config.ignoreWarnings = [
       ...(config.ignoreWarnings ?? []),
       {
-        module: /content-config[/\\]src[/\\]loadFlows\.ts$/,
+        module: /content-config[/\\]src[/\\]load(Flows|ScoringRules)\.ts$/,
         message: /Critical dependency: Accessing import\.meta directly/,
       },
     ];

@@ -17,11 +17,23 @@ export default function TrainPage() {
 
   return (
     <main className="mx-auto max-w-5xl px-4 py-8">
-      <h1 className="font-heading text-3xl font-medium tracking-tight">Train</h1>
-      <p className="text-muted-foreground mt-2 max-w-2xl text-sm">
-        Pick a scenario and go through it without knowing what is being
-        measured.
-      </p>
+      <div className="flex flex-wrap items-end justify-between gap-4">
+        <div>
+          <h1 className="font-heading text-3xl font-medium tracking-tight">
+            Train
+          </h1>
+          <p className="text-muted-foreground mt-2 max-w-2xl text-sm">
+            Pick a scenario and go through it without knowing what is being
+            measured.
+          </p>
+        </div>
+        <Link
+          href="/train/profile"
+          className="text-sm font-medium underline-offset-4 hover:underline"
+        >
+          Your profile
+        </Link>
+      </div>
 
       <ul className="mt-8 grid gap-4 sm:grid-cols-2">
         {experiments.map((experiment) => (

@@ -1,0 +1,96 @@
+{
+  "flowId": "memory-recall",
+  "version": 1,
+  "type": "experiment",
+  "title": "After the clip",
+  "track": "Memory",
+  "teaser": "Watch a short clip, sit with it for a moment, then answer what you remember seeing.",
+  "initial": "watch",
+  "steps": {
+    "watch": {
+      "type": "STOP",
+      "prompt": "Play the clip once. Notice what is actually on screen — not what you expect to see.",
+      "next": "wait",
+      "payload": {
+        "kind": "video-display",
+        "heading": "A short clip",
+        "src": "https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4",
+        "credit": "CC0 sample clip (MDN interactive examples). Placeholder until an original IsItFR Memory video is produced — not NASA or news footage."
+      }
+    },
+    "wait": {
+      "type": "STOP",
+      "prompt": "Don't replay the clip. Let the picture settle before the questions.",
+      "next": "color",
+      "payload": {
+        "kind": "delay",
+        "heading": "A short pause",
+        "durationMs": 8000
+      }
+    },
+    "color": {
+      "type": "BRANCH",
+      "prompt": "In the clip you just watched, what color were the petals?",
+      "options": [
+        {
+          "label": "Pink to magenta — a single bloom against a dark backdrop",
+          "value": "pink",
+          "next": "measure_color_accurate"
+        },
+        {
+          "label": "Bright yellow, like a sunflower filling the frame",
+          "value": "yellow",
+          "next": "measure_color_misleading"
+        }
+      ]
+    },
+    "measure_color_accurate": {
+      "type": "MEASURE",
+      "prompt": "Continue.",
+      "metric": "memory_reliability",
+      "weight": 1,
+      "next": "action"
+    },
+    "measure_color_misleading": {
+      "type": "MEASURE",
+      "prompt": "Continue.",
+      "metric": "memory_reliability",
+      "weight": 0,
+      "next": "action"
+    },
+    "action": {
+      "type": "BRANCH",
+      "prompt": "What happens in the clip?",
+      "options": [
+        {
+          "label": "One flower opens in close-up; the camera stays on that bloom",
+          "value": "closeup",
+          "next": "measure_action_accurate"
+        },
+        {
+          "label": "A bee crawls into the flower, then the shot cuts to a whole garden",
+          "value": "bee",
+          "next": "measure_action_misleading"
+        }
+      ]
+    },
+    "measure_action_accurate": {
+      "type": "MEASURE",
+      "prompt": "Continue.",
+      "metric": "memory_reliability",
+      "weight": 1,
+      "next": "done"
+    },
+    "measure_action_misleading": {
+      "type": "MEASURE",
+      "prompt": "Continue.",
+      "metric": "memory_reliability",
+      "weight": 0,
+      "next": "done"
+    },
+    "done": {
+      "type": "STOP",
+      "prompt": "That's the end of this short run."
+    }
+  }
+}

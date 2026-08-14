@@ -28,7 +28,12 @@ enabled = true
 [auth]
 enabled = true
 site_url = "http://localhost:3000"
-additional_redirect_urls = ["http://localhost:3000"]
+additional_redirect_urls = [
+  "http://localhost:3000",
+  "http://127.0.0.1:3000",
+  "https://isitfr.vercel.app",
+  "https://isitfr.vercel.app/auth/callback",
+]
 enable_signup = true
 
 [auth.email]

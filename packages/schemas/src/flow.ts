@@ -27,6 +27,9 @@ export const StepSchema = z
     weight: z.number().optional(),
     options: z.array(StepOptionSchema).optional(), // BRANCH steps
     next: z.string().optional(), // linear steps
+    // Generic stimulus the engine ignores. Stricter shapes are validated
+    // at the component that renders them, not here.
+    payload: z.record(z.string(), z.unknown()).optional(),
   })
   .superRefine((step, ctx) => {
     if (step.type === "MEASURE") {
@@ -111,6 +114,9 @@ export const FlowConfigSchema = z
     // Dashboard listing (experiments): track + teaser, never spoil "what it tests".
     track: z.string().optional(),
     teaser: z.string().optional(),
+    // Presentation only — ignored by the engine. "chat-bubble" restyles
+    // StepRenderer output; it is not a step type.
+    skin: z.enum(["chat-bubble"]).optional(),
     initial: z.string(),
     steps: z.record(z.string(), StepSchema), // keyed dynamically — no hardcoded step list anywhere
   })

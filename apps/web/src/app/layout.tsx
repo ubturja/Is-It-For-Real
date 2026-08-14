@@ -75,11 +75,19 @@ export default function RootLayout({
               Train
             </Link>
             <Link
+              href="/train/profile"
+              prefetch={false}
+              className={cn(buttonVariants({ variant: "ghost" }))}
+            >
+              Profile
+            </Link>
+            <Link
               href="/help"
               prefetch={false}
               className={cn(
                 buttonVariants({ variant: "destructive" }),
                 "ml-auto font-semibold uppercase tracking-wide",
+                "bg-step-stop text-white hover:bg-step-stop/90 hover:text-white",
               )}
             >
               Help

@@ -1,0 +1,99 @@
+{
+  "flowId": "framing-headlines",
+  "version": 1,
+  "type": "experiment",
+  "title": "Three takes",
+  "track": "Framing",
+  "teaser": "Three posts about the same local vote. Read them and pick the one you'd stand behind.",
+  "initial": "compare",
+  "steps": {
+    "compare": {
+      "type": "BRANCH",
+      "prompt": "These three posts cover the same city-council vote. Which one would you trust, or which would you pass along?",
+      "payload": {
+        "kind": "article-compare",
+        "variants": [
+          {
+            "id": "neutral",
+            "headline": "Westbridge council votes to shorten weekend library hours",
+            "source": "Westbridge Civic Record",
+            "body": "On Tuesday the city council voted 6–3 to close neighborhood libraries on Sundays and reduce Saturday hours from 10 a.m.–6 p.m. to 12–4 p.m., starting next month. The motion was presented as part of a $1.2 million facilities budget. A public comment period preceded the vote. Library staff said they would post the new schedule this week."
+          },
+          {
+            "id": "emotional",
+            "headline": "Sunday storytime gone: kids locked out after library hours vanish",
+            "source": "Neighborhood Watch Daily",
+            "body": "Parents left the chamber in tears after the council stripped Sunday hours from neighborhood libraries. Children who counted on weekend storytime now have nowhere to go. 'They took the one quiet place that felt safe,' said a caregiver who had queued since morning. The new Saturday window is a sliver of what families had. Staff will post the reduced schedule this week."
+          },
+          {
+            "id": "political",
+            "headline": "Council majority steamrolls library cuts despite neighborhood opposition",
+            "source": "Westbridge Ledger — Opinion",
+            "body": "The ruling bloc pushed through weekend library closures on a 6–3 party-line vote, brushing aside a packed comment period. Critics call it a loyalty test: trim a public service now, claim fiscal discipline later. The $1.2 million facilities line is the pretext; the target is a civic space that did not vote their way. A shortened Saturday window is all that remains."
+          }
+        ],
+        "actions": [
+          { "value": "trust", "label": "I trust this one" },
+          { "value": "share", "label": "I'd share this one" }
+        ]
+      },
+      "options": [
+        {
+          "label": "Trust the civic record",
+          "value": "neutral_trust",
+          "next": "measure_neutral"
+        },
+        {
+          "label": "Share the civic record",
+          "value": "neutral_share",
+          "next": "measure_neutral"
+        },
+        {
+          "label": "Trust the neighborhood post",
+          "value": "emotional_trust",
+          "next": "measure_emotional"
+        },
+        {
+          "label": "Share the neighborhood post",
+          "value": "emotional_share",
+          "next": "measure_emotional"
+        },
+        {
+          "label": "Trust the opinion piece",
+          "value": "political_trust",
+          "next": "measure_political"
+        },
+        {
+          "label": "Share the opinion piece",
+          "value": "political_share",
+          "next": "measure_political"
+        }
+      ]
+    },
+    "measure_neutral": {
+      "type": "MEASURE",
+      "prompt": "Continue.",
+      "metric": "framing_bias",
+      "weight": 0,
+      "next": "done"
+    },
+    "measure_emotional": {
+      "type": "MEASURE",
+      "prompt": "Continue.",
+      "metric": "framing_bias",
+      "weight": 1,
+      "next": "done"
+    },
+    "measure_political": {
+      "type": "MEASURE",
+      "prompt": "Continue.",
+      "metric": "framing_bias",
+      "weight": 2,
+      "next": "done"
+    },
+    "done": {
+      "type": "STOP",
+      "prompt": "That's the end of this short run."
+    }
+  }
+}

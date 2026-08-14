@@ -1,0 +1,26 @@
+{
+  "flowId": "echo-chamber",
+  "version": 1,
+  "type": "experiment",
+  "title": "Your feed",
+  "track": "Echo",
+  "teaser": "A short stream of posts. Open a few and notice how the mix shifts.",
+  "initial": "perspective_diversity",
+  "steps": {
+    "perspective_diversity": {
+      "type": "MEASURE",
+      "prompt": "A short feed — open what you would tap, then continue.",
+      "metric": "perspective_diversity",
+      "next": "done",
+      "payload": {
+        "kind": "echo-feed",
+        "feedKey": "echo-chamber",
+        "clicks": 5
+      }
+    },
+    "done": {
+      "type": "STOP",
+      "prompt": "That's the end of this short run."
+    }
+  }
+}

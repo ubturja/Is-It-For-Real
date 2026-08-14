@@ -184,6 +184,26 @@ describe("validateFlowConfig", () => {
     expect(ok.teaser).toBe("Jump in without knowing what is measured.");
   });
 
+  it("accepts optional chat-bubble skin and ignores it for crisis-shaped configs", () => {
+    const withSkin = validateFlowConfig({
+      flowId: "skinned",
+      version: 1,
+      type: "experiment",
+      title: "Skinned",
+      track: "Room",
+      teaser: "A short interactive scenario.",
+      skin: "chat-bubble",
+      initial: "done",
+      steps: {
+        done: { type: "STOP", prompt: "Done" },
+      },
+    });
+    expect(withSkin.skin).toBe("chat-bubble");
+
+    const crisis = validateFlowConfig(validCrisisConfig);
+    expect(crisis.skin).toBeUndefined();
+  });
+
   it("rejects a direct self-loop (next pointing at the same step)", () => {
     expect(() =>
       validateFlowConfig({
@@ -320,6 +340,56 @@ describe("validateFlowConfig", () => {
       },
     });
     expect(withoutWeight.steps.probe.weight).toBeUndefined();
+  });
+
+  it("accepts optional generic payload and preserves nested stimulus", () => {
+    const withPayload = validateFlowConfig({
+      flowId: "payload-ok",
+      version: 1,
+      type: "experiment",
+      title: "Payload ok",
+      track: "Foundation",
+      teaser: "A short interactive scenario.",
+      initial: "fork",
+      steps: {
+        fork: {
+          type: "BRANCH",
+          prompt: "Pick a take",
+          payload: {
+            kind: "article-compare",
+            variants: [
+              { id: "neutral", headline: "Hours trimmed", body: "Council vote." },
+            ],
+          },
+          options: [
+            { label: "Trust", value: "neutral_trust", next: "done" },
+          ],
+        },
+        done: {
+          type: "STOP",
+          prompt: "Done",
+        },
+      },
+    });
+
+    expect(withPayload.steps.fork.payload).toEqual({
+      kind: "article-compare",
+      variants: [
+        { id: "neutral", headline: "Hours trimmed", body: "Council vote." },
+      ],
+    });
+
+    const withoutPayload = validateFlowConfig({
+      flowId: "payload-absent",
+      version: 1,
+      type: "crisis",
+      title: "No payload",
+      initial: "stop",
+      steps: {
+        stop: { type: "STOP", prompt: "Stop." },
+      },
+    });
+    expect(withoutPayload.steps.stop.payload).toBeUndefined();
   });
 
   it("fails when a non-BRANCH step next points to a missing step key", () => {

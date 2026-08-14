@@ -5,7 +5,11 @@
     "PRESERVE": { "title": "Preserve evidence" },
     "BRANCH": { "title": "Choose a path" },
     "MEASURE": { "title": "Measure" },
-    "TEMPLATE": { "titleFallback": "Message template" },
+    "TEMPLATE": {
+      "titleFallback": "Message template",
+      "nameLabel": "A name to include (optional)",
+      "namePlaceholder": "Name"
+    },
     "RESOURCES": {
       "eyebrow": "Done for now",
       "titleFallback": "Resources"

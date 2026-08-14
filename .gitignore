@@ -33,6 +33,12 @@ apps/web/playwright-report
 apps/web/blob-report
 apps/web/playwright/.cache
 
+# Vercel
+.vercel
+
+# Local Supabase CLI cache
+supabase/.temp
+
 #files
 cursor-rules.md
 IsItFR.mdc

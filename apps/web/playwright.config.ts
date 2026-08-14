@@ -6,9 +6,19 @@ loadEnvConfig(process.cwd());
 const PORT = Number(process.env.PLAYWRIGHT_PORT ?? 3000);
 const BASE_URL = process.env.PLAYWRIGHT_BASE_URL ?? `http://127.0.0.1:${PORT}`;
 
+function isLocalBaseUrl(url: string): boolean {
+  try {
+    const { hostname } = new URL(url);
+    return hostname === "127.0.0.1" || hostname === "localhost";
+  } catch {
+    return true;
+  }
+}
+
 /**
  * Crisis Mode e2e runs against a production server so Serwist is enabled
- * (SW is disabled in `next dev`).
+ * (SW is disabled in `next dev`). Set PLAYWRIGHT_BASE_URL to a remote
+ * origin (e.g. the Vercel URL) to skip the local webServer.
  */
 export default defineConfig({
   testDir: "./e2e",
@@ -33,10 +43,12 @@ export default defineConfig({
       },
     },
   ],
-  webServer: {
-    command: `pnpm start -p ${PORT}`,
-    url: BASE_URL,
-    reuseExistingServer: !process.env.CI,
-    timeout: 120_000,
-  },
+  webServer: isLocalBaseUrl(BASE_URL)
+    ? {
+        command: `pnpm start -p ${PORT}`,
+        url: BASE_URL,
+        reuseExistingServer: !process.env.CI,
+        timeout: 120_000,
+      }
+    : undefined,
 });

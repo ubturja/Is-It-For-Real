@@ -1,0 +1,8 @@
+[
+  {
+    "metric": "perspective_diversity",
+    "aggregation": "last",
+    "normalizeToRange": [0, 1],
+    "description": "Take the single recorded observation; scale onto 0–1 if needed."
+  }
+]
