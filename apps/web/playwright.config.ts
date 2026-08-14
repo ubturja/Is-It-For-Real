@@ -1,7 +1,14 @@
 import { loadEnvConfig } from "@next/env";
 import { defineConfig, devices } from "@playwright/test";
+import { WebSocket as WsWebSocket } from "ws";
 
 loadEnvConfig(process.cwd());
+
+// supabase-js requires a global WebSocket. Node 20 (and some CI images)
+// do not provide one; `ws` fills the gap for Playwright's Node process.
+if (typeof globalThis.WebSocket === "undefined") {
+  globalThis.WebSocket = WsWebSocket as unknown as typeof globalThis.WebSocket;
+}
 
 const PORT = Number(process.env.PLAYWRIGHT_PORT ?? 3000);
 const BASE_URL = process.env.PLAYWRIGHT_BASE_URL ?? `http://127.0.0.1:${PORT}`;
