@@ -71,6 +71,24 @@ jobs:
       - name: Axe + keyboard Crisis Mode
         run: pnpm --filter web test:e2e:a11y
 
+      - name: Upload Playwright report
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report-a11y
+          path: apps/web/playwright-report/
+          if-no-files-found: ignore
+          retention-days: 7
+
+      - name: Upload Playwright test results
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-test-results-a11y
+          path: apps/web/test-results/
+          if-no-files-found: ignore
+          retention-days: 7
+
   e2e:
     runs-on: ubuntu-latest
     timeout-minutes: 30
@@ -112,3 +130,21 @@ jobs:
 
       - name: Playwright journeys
         run: pnpm --filter web test:e2e
+
+      - name: Upload Playwright report
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report-e2e
+          path: apps/web/playwright-report/
+          if-no-files-found: ignore
+          retention-days: 7
+
+      - name: Upload Playwright test results
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-test-results-e2e
+          path: apps/web/test-results/
+          if-no-files-found: ignore
+          retention-days: 7

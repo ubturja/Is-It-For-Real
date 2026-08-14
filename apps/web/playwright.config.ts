@@ -35,10 +35,12 @@ export default defineConfig({
   workers: 1,
   timeout: 60_000,
   expect: { timeout: 15_000 },
-  reporter: [["list"]],
+  reporter: process.env.CI
+    ? [["list"], ["html", { open: "never", outputFolder: "playwright-report" }]]
+    : [["list"]],
   use: {
     baseURL: BASE_URL,
-    trace: "on-first-retry",
+    trace: process.env.CI ? "retain-on-failure" : "on-first-retry",
     // Fresh context per test — no cookies / storage carried over.
     storageState: { cookies: [], origins: [] },
   },
