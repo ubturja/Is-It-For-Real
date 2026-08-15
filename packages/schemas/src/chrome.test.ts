@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { validateDashboardChrome, validateReportChrome, validateStepChrome } from "./chrome";
+import {
+  validateDashboardChrome,
+  validateLandingChrome,
+  validateReportChrome,
+  validateStepChrome,
+} from "./chrome";
 
 describe("validateStepChrome", () => {
   it("rejects chrome missing STOP title", () => {
@@ -49,6 +54,72 @@ describe("validateReportChrome", () => {
         back: "Back to scenarios",
       }),
     ).toThrow(/regenerate/i);
+  });
+});
+
+describe("validateLandingChrome", () => {
+  it("rejects chrome missing the hero headline", () => {
+    expect(() =>
+      validateLandingChrome({
+        locale: "en",
+        hero: { subline: "Two tools." },
+        explainer: [
+          { eyebrow: "What this is", body: "A." },
+          { eyebrow: "The problem", body: "B." },
+          { eyebrow: "What you do here", body: "C." },
+        ],
+        entries: [
+          {
+            kind: "practice",
+            eyebrow: "Practice",
+            body: "A.",
+            action: "Start practicing",
+          },
+          {
+            kind: "help",
+            eyebrow: "Get help now",
+            body: "B.",
+            action: "Get help now",
+          },
+        ],
+        footer: {
+          wordmark: "IsItFR",
+          practice: "Practice",
+          help: "Get help now",
+          note: "Crisis help never asks you to sign in.",
+        },
+      }),
+    ).toThrow(/headline/i);
+  });
+
+  it("rejects chrome that does not have exactly three explainer blocks", () => {
+    expect(() =>
+      validateLandingChrome({
+        locale: "en",
+        hero: { headline: "Is It For Real?", subline: "Two tools." },
+        explainer: [{ eyebrow: "What this is", body: "A." }],
+        entries: [
+          {
+            kind: "practice",
+            eyebrow: "Practice",
+            body: "A.",
+            action: "Start practicing",
+          },
+          {
+            kind: "help",
+            eyebrow: "Get help now",
+            body: "B.",
+            action: "Get help now",
+          },
+        ],
+        footer: {
+          wordmark: "IsItFR",
+          practice: "Practice",
+          help: "Get help now",
+          note: "Crisis help never asks you to sign in.",
+        },
+      }),
+    ).toThrow(/explainer/i);
   });
 });
 

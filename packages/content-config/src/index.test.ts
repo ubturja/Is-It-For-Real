@@ -7,7 +7,7 @@ import { compileFlowToMachine } from "@isitfr/engine";
 import { validateFlowConfig } from "@isitfr/schemas";
 import { interpret } from "xstate";
 
-import { getDashboardChrome, getFeed, getFlow, getMessageTemplate, getProfileChrome, getReportChrome, getResources, getStepChrome, listExperiments, listFlows } from "./index";
+import { getDashboardChrome, getFeed, getFlow, getLandingChrome, getMessageTemplate, getProfileChrome, getReportChrome, getResources, getStepChrome, listExperiments, listFlows } from "./index";
 
 const FLOWS_DIR = join(dirname(fileURLToPath(import.meta.url)), "flows");
 const FLOW_FILENAME_RE = /\.v.+\.json$/;
@@ -663,6 +663,40 @@ describe("getDashboardChrome", () => {
     expect(chrome.title.length).toBeGreaterThan(0);
     expect(chrome.intro.length).toBeGreaterThan(0);
     expect(chrome.profile.length).toBeGreaterThan(0);
+  });
+});
+
+describe("getLandingChrome", () => {
+  it("loads the landing hero question from chrome, not a hardcoded page string", () => {
+    const chrome = getLandingChrome();
+    expect(chrome.hero.headline).toBe("Is It For Real?");
+    expect(chrome.hero.subline.length).toBeGreaterThan(0);
+  });
+
+  it("loads three explainer blocks with real product copy, not placeholders", () => {
+    const chrome = getLandingChrome();
+    expect(chrome.explainer).toHaveLength(3);
+    expect(chrome.explainer.map((block) => block.eyebrow)).toEqual([
+      "What this is",
+      "The problem",
+      "What you do here",
+    ]);
+    const blob = chrome.explainer.map((block) => block.body).join(" ");
+    expect(blob.toLowerCase()).not.toMatch(/lorem|ipsum|placeholder|todo/);
+    expect(blob.toLowerCase()).toMatch(/practice/);
+    expect(blob.toLowerCase()).toMatch(/deepfake|fake/);
+    expect(blob.toLowerCase()).toMatch(/sign in/);
+  });
+
+  it("loads two path entries for practice and help", () => {
+    const chrome = getLandingChrome();
+    expect(chrome.entries.map((entry) => entry.kind)).toEqual([
+      "practice",
+      "help",
+    ]);
+    expect(chrome.entries[0]?.action).toBe("Start practicing");
+    expect(chrome.entries[1]?.action).toBe("Get help now");
+    expect(chrome.footer.note.toLowerCase()).toMatch(/sign in/);
   });
 });
 

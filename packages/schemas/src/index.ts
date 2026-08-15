@@ -21,6 +21,9 @@ export {
   DashboardChromeSchema,
   validateDashboardChrome,
   type DashboardChrome,
+  LandingChromeSchema,
+  validateLandingChrome,
+  type LandingChrome,
 } from "./chrome";
 
 export {

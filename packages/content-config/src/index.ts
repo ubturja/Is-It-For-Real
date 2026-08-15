@@ -166,9 +166,11 @@ export { getStepChrome, stepChrome } from "./stepChrome";
 export { getProfileChrome, profileChrome } from "./profileChrome";
 export { getReportChrome, reportChrome } from "./reportChrome";
 export { getDashboardChrome, dashboardChrome } from "./dashboardChrome";
+export { getLandingChrome, landingChrome } from "./landingChrome";
 export type {
   StepChrome,
   ProfileChrome,
   ReportChrome,
   DashboardChrome,
+  LandingChrome,
 } from "@isitfr/schemas";

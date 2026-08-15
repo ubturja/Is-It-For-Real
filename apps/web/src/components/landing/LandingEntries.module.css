@@ -1,0 +1,121 @@
+.list {
+  display: grid;
+  gap: 1rem;
+  margin-top: 2.75rem;
+}
+
+@media (min-width: 640px) {
+  .list {
+    grid-template-columns: 1fr 1fr;
+    gap: 1.25rem;
+    margin-top: 3.5rem;
+  }
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  min-height: 100%;
+  padding: 1.25rem 1.35rem 1.35rem;
+  text-decoration: none;
+  border-radius: 0.25rem;
+  outline: none;
+  transition:
+    background-color 160ms ease,
+    box-shadow 160ms ease,
+    border-color 160ms ease;
+}
+
+.card:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 3px;
+}
+
+.eyebrow {
+  margin: 0;
+  font-size: 0.7rem;
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.body {
+  margin: 0.75rem 0 1.25rem;
+  flex: 1;
+  font-size: 1rem;
+  line-height: 1.55;
+}
+
+.action {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.95rem;
+  font-weight: 500;
+}
+
+.arrow {
+  display: inline-block;
+  transition: transform 180ms ease;
+}
+
+.card:hover .arrow,
+.card:focus-visible .arrow {
+  transform: translateX(0.28rem);
+}
+
+.practice {
+  color: #12181c;
+  background: color-mix(in srgb, #1f6f6b 9%, #f7f5f0);
+  border: 1px solid #1f6f6b;
+  box-shadow: inset 4px 0 0 #1f6f6b;
+}
+
+.practice:hover {
+  background: color-mix(in srgb, #1f6f6b 16%, #f7f5f0);
+  box-shadow: inset 6px 0 0 #1f6f6b;
+}
+
+.practice:focus-visible {
+  outline-color: #1f6f6b;
+}
+
+.practice .eyebrow,
+.practice .action {
+  color: #1f6f6b;
+}
+
+.help {
+  color: #f7f5f0;
+  background: #b8402f;
+  border: 1px solid #b8402f;
+  box-shadow: inset 4px 0 0 #8e2f22;
+}
+
+.help:hover {
+  background: #a3382a;
+  border-color: #a3382a;
+  box-shadow: inset 6px 0 0 #7a281d;
+}
+
+.help:focus-visible {
+  outline-color: #b8402f;
+}
+
+.help .eyebrow,
+.help .action {
+  color: #f7f5f0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .card,
+  .arrow {
+    transition: none;
+  }
+
+  .card:hover .arrow,
+  .card:focus-visible .arrow {
+    transform: none;
+  }
+}
