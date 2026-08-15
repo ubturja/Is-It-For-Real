@@ -227,7 +227,7 @@ flowchart TB
     end
     subgraph AI["AI Layer (Phase 7 — built)"]
         SDK["Vercel AI SDK"]
-        MODEL["GPT-4o-mini"]
+        MODEL["Groq — Llama 3.3 70B"]
     end
     XSTATE -.compiled from.-> ENGINE
     ENGINE -.validates against.-> SCHEMAS
@@ -243,6 +243,8 @@ flowchart TB
     style EDGE stroke-dasharray: 5 5
 ```
 
+**AI layer:** training reflection (`POST /api/sessions/[id]/reflect`) and optional Crisis template rewording (`POST /api/crisis/personalize-template`) call Groq `llama-3.3-70b-versatile` through the Vercel AI SDK (`GROQ_API_KEY`, never a public prefix). Groq is used because it is free, requires no billing, and serves open-source models only.
+
 ## 7. High-Level Architecture (pitch view)
 
 ```mermaid
@@ -250,7 +252,7 @@ flowchart LR
     U["User"] --> WEB["Next.js App (Web + API)"]
     WEB --> ENGINE["Config-Driven Decision Engine (XState + JSON)"]
     WEB --> AUTH["Supabase (Auth + Postgres + RLS)"]
-    ENGINE --> AI["AI Reflection (Vercel AI SDK)"]
+    ENGINE --> AI["AI Reflection (Groq / Llama 3.3 70B)"]
     WEB -.offline.-> PWA["Service Worker + IndexedDB"]
 ```
 

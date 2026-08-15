@@ -11,8 +11,8 @@ vi.mock("ai", () => ({
   generateObject: generateObjectMock,
 }));
 
-vi.mock("@ai-sdk/openai", () => ({
-  openai: (id: string) => ({ modelId: id }),
+vi.mock("@ai-sdk/groq", () => ({
+  groq: (id: string) => ({ modelId: id }),
 }));
 
 vi.mock("@/lib/supabase/server", () => ({
@@ -179,7 +179,30 @@ describe("POST /api/sessions/[id]/reflect", () => {
       session_id: SESSION_ID,
       user_id: USER_ID,
       content: JSON.stringify(validReport),
-      model_used: "gpt-4o-mini",
+      model_used: "groq/llama-3.3-70b-versatile",
     });
+  });
+
+  it("returns 502 quickly when Groq rate-limits (429), without writing a report", async () => {
+    generateObjectMock.mockRejectedValue(
+      Object.assign(new Error("Rate limit reached for model"), {
+        statusCode: 429,
+      }),
+    );
+
+    const started = Date.now();
+    const response = await POST(
+      new Request("http://localhost/api/sessions/session-1/reflect", {
+        method: "POST",
+      }),
+      { params: { id: SESSION_ID } },
+    );
+    expect(Date.now() - started).toBeLessThan(1_000);
+    expect(response.status).toBe(502);
+    await expect(response.json()).resolves.toMatchObject({
+      error: { code: "reflection_failed", message: "groq_rate_limited" },
+    });
+    expect(reportsUpsert).toBeUndefined();
+    expect(generateObjectMock).toHaveBeenCalledOnce();
   });
 });

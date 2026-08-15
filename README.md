@@ -18,7 +18,7 @@ Architecture and contracts: [`docs/SYSTEM_REFERENCE.md`](docs/SYSTEM_REFERENCE.m
 ```bash
 pnpm install
 cp apps/web/.env.local.example apps/web/.env.local
-# Fill Supabase URL/keys, OPENAI_API_KEY, and E2E_* (see the example file).
+# Fill Supabase URL/keys, GROQ_API_KEY, and E2E_* (see the example file).
 pnpm --filter web dev
 ```
 
@@ -37,8 +37,8 @@ pnpm --filter web test:e2e            # production build + full Playwright
 pnpm --filter web test:e2e:a11y       # axe-core (critical/serious) + keyboard Crisis Mode
 ```
 
-CI (`.github/workflows/ci.yml`) runs lint/typecheck/unit, then a11y and e2e against a production Next build. Required GitHub Actions secrets: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `E2E_EMAIL`, `E2E_PASSWORD`. Optional: `OPENAI_API_KEY` (reflect/personalize; e2e mocks reflect).
+CI (`.github/workflows/ci.yml`) runs lint/typecheck/unit, then a11y and e2e against a production Next build. Required GitHub Actions secrets: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `E2E_EMAIL`, `E2E_PASSWORD`. Optional: `GROQ_API_KEY` (reflect/personalize; e2e mocks reflect).
 
 ## Deploy
 
-Vercel project root is `apps/web`. Set the same server env vars there — never `NEXT_PUBLIC_OPENAI_*` or a public service-role key. Crisis Mode is a static/PWA path; training Route Handlers stay inside the Next.js app.
+Vercel project root is `apps/web`. Set the same server env vars there — never `NEXT_PUBLIC_GROQ_*` or a public service-role key. Crisis Mode is a static/PWA path; training Route Handlers stay inside the Next.js app.

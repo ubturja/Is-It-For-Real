@@ -7,6 +7,7 @@ const SRC_ROOT = join(__dirname, "../..");
 
 const FORBIDDEN_PUBLIC_PREFIXES = [
   "NEXT_PUBLIC_OPENAI",
+  "NEXT_PUBLIC_GROQ",
   "NEXT_PUBLIC_AI_",
   "NEXT_PUBLIC_SUPABASE_SERVICE",
 ];
@@ -44,8 +45,9 @@ describe("server-only secrets", () => {
     expect(leaks).toEqual([]);
   });
 
-  it("does not read OPENAI_API_KEY from client modules", () => {
+  it("does not read GROQ_API_KEY from client modules", () => {
     const client = readFileSync(join(SRC_ROOT, "lib/supabase/client.ts"), "utf8");
+    expect(client).not.toMatch(/GROQ_API_KEY/);
     expect(client).not.toMatch(/OPENAI_API_KEY/);
     expect(client).not.toMatch(/SUPABASE_SERVICE_ROLE_KEY/);
   });

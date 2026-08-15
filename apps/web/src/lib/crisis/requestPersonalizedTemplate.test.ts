@@ -39,4 +39,21 @@ describe("requestPersonalizedTemplate", () => {
     expect(init.body).not.toMatch(/Alex/);
     expect(init.body).not.toMatch(/"name"/);
   });
+
+  it("treats a 429 as unavailable so TemplateStep keeps the static body", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue({
+        ok: false,
+        status: 429,
+        json: async () => ({
+          error: { code: "personalize_failed", message: "groq_rate_limited" },
+        }),
+      }),
+    );
+
+    await expect(
+      requestPersonalizedTemplate("crisis-deepfake-classmate-trusted-adult"),
+    ).rejects.toThrow("personalize_unavailable");
+  });
 });

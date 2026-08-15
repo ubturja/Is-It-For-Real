@@ -8,8 +8,8 @@ vi.mock("ai", () => ({
   generateObject: generateObjectMock,
 }));
 
-vi.mock("@ai-sdk/openai", () => ({
-  openai: (id: string) => ({ modelId: id }),
+vi.mock("@ai-sdk/groq", () => ({
+  groq: (id: string) => ({ modelId: id }),
 }));
 
 import { NAME_TOKEN, withNameToken } from "./namePlaceholder";
@@ -102,5 +102,22 @@ describe("personalizeTemplate", () => {
 
     expect(result.body).toContain(NAME_TOKEN);
     expect(result).not.toHaveProperty("steps");
+  });
+
+  it("maps a Groq 429 to groq_rate_limited without retrying", async () => {
+    generateObjectMock.mockRejectedValue(
+      Object.assign(new Error("Rate limit reached for model"), {
+        statusCode: 429,
+      }),
+    );
+
+    await expect(personalizeTemplate(TEMPLATE_KEY)).rejects.toThrow(
+      "groq_rate_limited",
+    );
+    expect(generateObjectMock).toHaveBeenCalledOnce();
+    const request = generateObjectMock.mock.calls[0]?.[0] as {
+      maxRetries: number;
+    };
+    expect(request.maxRetries).toBe(0);
   });
 });
