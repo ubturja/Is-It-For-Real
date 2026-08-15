@@ -1,0 +1,41 @@
+{
+  "locale": "en",
+  "hero": {
+    "headline": "Is It For Real?",
+    "subline": "Two tools: practice spotting manipulation, or get through the next ten minutes if a fake of someone you know is already circulating."
+  },
+  "explainer": [
+    {
+      "eyebrow": "What this is",
+      "body": "IsItFR is two tools, kept apart on purpose. Practice puts you inside the trick instead of asking you to define it. Get help is for the minute a fake of someone you know is already circulating."
+    },
+    {
+      "eyebrow": "The problem",
+      "body": "You can explain media literacy and still freeze when a clip looks like a classmate. A definition does not tell you what to do in that minute, and most advice assumes you have time to study."
+    },
+    {
+      "eyebrow": "What you do here",
+      "body": "You run short experiments without being told what they score. If it is happening now, you follow five fixed steps — stop, save what you saw, choose who to tell, send a message, get resources. That path never asks you to sign in."
+    }
+  ],
+  "entries": [
+    {
+      "kind": "practice",
+      "eyebrow": "Practice",
+      "body": "Try experiments that put you inside the trick. You will need an account.",
+      "action": "Start practicing"
+    },
+    {
+      "kind": "help",
+      "eyebrow": "Get help now",
+      "body": "Stop, save evidence, choose who to tell, send a message. No account. Works offline after the first visit.",
+      "action": "Get help now"
+    }
+  ],
+  "footer": {
+    "wordmark": "IsItFR",
+    "practice": "Practice",
+    "help": "Get help now",
+    "note": "Crisis help never asks you to sign in."
+  }
+}

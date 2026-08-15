@@ -1,0 +1,58 @@
+.box {
+  position: relative;
+  display: block;
+  max-width: 100%;
+}
+
+.reserve {
+  visibility: hidden;
+}
+
+.live {
+  position: absolute;
+  inset: 0;
+}
+
+.caret {
+  display: inline-block;
+  width: 0.08em;
+  height: 0.85em;
+  margin-left: 0.12em;
+  vertical-align: -0.05em;
+  background: currentColor;
+  animation: landing-caret 1.05s steps(1) infinite;
+}
+
+@keyframes landing-caret {
+  50% {
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reserve {
+    visibility: visible;
+  }
+
+  .live {
+    display: none;
+  }
+
+  .caret {
+    display: none;
+    animation: none;
+  }
+}
+
+.box[data-reduce-motion="true"] .reserve {
+  visibility: visible;
+}
+
+.box[data-reduce-motion="true"] .live {
+  display: none;
+}
+
+.box[data-reduce-motion="true"] .caret {
+  display: none;
+  animation: none;
+}

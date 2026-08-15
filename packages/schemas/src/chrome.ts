@@ -80,6 +80,47 @@ export const DashboardChromeSchema = z.object({
 
 export type DashboardChrome = z.infer<typeof DashboardChromeSchema>;
 
+/** Home landing chrome — hero, explainer, path entries, and footer. */
+export const LandingChromeSchema = z.object({
+  locale: z.string(),
+  hero: z.object({
+    headline: z.string().min(1),
+    subline: z.string().min(1),
+  }),
+  explainer: z
+    .array(
+      z.object({
+        eyebrow: z.string().min(1),
+        body: z.string().min(1),
+      }),
+    )
+    .length(3),
+  entries: z
+    .array(
+      z.object({
+        kind: z.enum(["practice", "help"]),
+        eyebrow: z.string().min(1),
+        body: z.string().min(1),
+        action: z.string().min(1),
+      }),
+    )
+    .length(2)
+    .refine(
+      (entries) =>
+        entries.some((entry) => entry.kind === "practice") &&
+        entries.some((entry) => entry.kind === "help"),
+      { message: "entries must include practice and help" },
+    ),
+  footer: z.object({
+    wordmark: z.string().min(1),
+    practice: z.string().min(1),
+    help: z.string().min(1),
+    note: z.string().min(1),
+  }),
+});
+
+export type LandingChrome = z.infer<typeof LandingChromeSchema>;
+
 function formatZodIssues(error: z.ZodError): string {
   return error.issues
     .map((issue) => {
@@ -117,6 +158,14 @@ export function validateDashboardChrome(json: unknown): DashboardChrome {
   const result = DashboardChromeSchema.safeParse(json);
   if (!result.success) {
     throw new Error(`Invalid DashboardChrome:\n${formatZodIssues(result.error)}`);
+  }
+  return result.data;
+}
+
+export function validateLandingChrome(json: unknown): LandingChrome {
+  const result = LandingChromeSchema.safeParse(json);
+  if (!result.success) {
+    throw new Error(`Invalid LandingChrome:\n${formatZodIssues(result.error)}`);
   }
   return result.data;
 }

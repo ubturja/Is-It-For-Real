@@ -70,25 +70,21 @@ export default function RootLayout({
             <Link
               href="/train"
               prefetch={false}
-              className={cn(buttonVariants({ variant: "ghost" }))}
+              className="text-muted-foreground hover:text-foreground rounded-md px-2.5 py-1.5 text-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2"
             >
               Train
             </Link>
             <Link
               href="/train/profile"
               prefetch={false}
-              className={cn(buttonVariants({ variant: "ghost" }))}
+              className="text-muted-foreground hover:text-foreground rounded-md px-2.5 py-1.5 text-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2"
             >
               Profile
             </Link>
             <Link
               href="/help"
               prefetch={false}
-              className={cn(
-                buttonVariants({ variant: "destructive" }),
-                "ml-auto font-semibold uppercase tracking-wide",
-                "bg-step-stop text-white hover:bg-step-stop/90 hover:text-white",
-              )}
+              className="ml-auto rounded-md px-2.5 py-1.5 text-sm font-medium text-step-stop underline-offset-4 hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-step-stop"
             >
               Help
             </Link>

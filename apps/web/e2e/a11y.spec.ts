@@ -13,6 +13,14 @@ import { expectStopStep } from "./helpers/crisis";
 const STUB_PATH = "/train/experiment-stub";
 
 test.describe("axe-core", () => {
+  test("/ has no critical or serious violations", async ({ page }) => {
+    await page.goto("/");
+    await expect(
+      page.getByRole("heading", { level: 1, name: "Is It For Real?" }),
+    ).toBeVisible();
+    await expectNoSeriousAxeViolations(page);
+  });
+
   test("/help has no critical or serious violations", async ({ page }) => {
     await page.goto("/help");
     await expectStopStep(page);
