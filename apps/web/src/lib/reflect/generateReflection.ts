@@ -1,4 +1,4 @@
-import { openai } from "@ai-sdk/openai";
+import { groq } from "@ai-sdk/groq";
 import {
   ReflectionPromptPayloadSchema,
   ReflectionReportSchema,
@@ -7,7 +7,14 @@ import {
 } from "@isitfr/schemas";
 import { generateObject } from "ai";
 
-export const REFLECTION_MODEL_ID = "gpt-4o-mini";
+import {
+  GROQ_GENERATE_MAX_RETRIES,
+  isProviderRateLimitError,
+} from "@/lib/ai/groqLimits";
+
+export const REFLECTION_MODEL_ID = "llama-3.3-70b-versatile";
+/** Stored on `reports.model_used` — Groq-identifiable, not the bare model slug. */
+export const REFLECTION_MODEL_USED = `groq/${REFLECTION_MODEL_ID}`;
 
 /**
  * Bound the model to scores + descriptions. Explicitly forbid judgment,
@@ -35,14 +42,23 @@ export async function generateReflection(
   metrics: ReflectionPromptMetric[],
 ): Promise<{ report: ReflectionReport; model_used: string }> {
   const prompt = serializeReflectionPrompt(metrics);
-  const { object } = await generateObject({
-    model: openai(REFLECTION_MODEL_ID),
-    schema: ReflectionReportSchema,
-    system: REFLECTION_SYSTEM_PROMPT,
-    prompt,
-  });
+  let object;
+  try {
+    ({ object } = await generateObject({
+      model: groq(REFLECTION_MODEL_ID),
+      schema: ReflectionReportSchema,
+      system: REFLECTION_SYSTEM_PROMPT,
+      prompt,
+      maxRetries: GROQ_GENERATE_MAX_RETRIES,
+    }));
+  } catch (err) {
+    if (isProviderRateLimitError(err)) {
+      throw new Error("groq_rate_limited");
+    }
+    throw err;
+  }
   return {
     report: ReflectionReportSchema.parse(object),
-    model_used: REFLECTION_MODEL_ID,
+    model_used: REFLECTION_MODEL_USED,
   };
 }

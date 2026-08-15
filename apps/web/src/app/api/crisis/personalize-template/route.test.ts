@@ -8,8 +8,8 @@ vi.mock("ai", () => ({
   generateObject: generateObjectMock,
 }));
 
-vi.mock("@ai-sdk/openai", () => ({
-  openai: (id: string) => ({ modelId: id }),
+vi.mock("@ai-sdk/groq", () => ({
+  groq: (id: string) => ({ modelId: id }),
 }));
 
 import { NAME_TOKEN, withNameToken } from "@/lib/crisis/namePlaceholder";
@@ -151,6 +151,25 @@ describe("POST /api/crisis/personalize-template", () => {
       personalizeRequest({ templateKey: TEMPLATE_KEY }, "192.0.2.40"),
     );
     expect(response.status).toBe(200);
+    expect(generateObjectMock).toHaveBeenCalledOnce();
+  });
+
+  it("returns 502 quickly when Groq rate-limits (429) so the client keeps the static template", async () => {
+    generateObjectMock.mockRejectedValue(
+      Object.assign(new Error("Rate limit reached for model"), {
+        statusCode: 429,
+      }),
+    );
+
+    const started = Date.now();
+    const response = await POST(
+      personalizeRequest({ templateKey: TEMPLATE_KEY }, "192.0.2.55"),
+    );
+    expect(Date.now() - started).toBeLessThan(1_000);
+    expect(response.status).toBe(502);
+    await expect(response.json()).resolves.toMatchObject({
+      error: { code: "personalize_failed", message: "groq_rate_limited" },
+    });
     expect(generateObjectMock).toHaveBeenCalledOnce();
   });
 });

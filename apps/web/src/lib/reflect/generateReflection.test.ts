@@ -11,12 +11,13 @@ vi.mock("ai", () => ({
   generateObject: generateObjectMock,
 }));
 
-vi.mock("@ai-sdk/openai", () => ({
-  openai: (id: string) => ({ modelId: id }),
+vi.mock("@ai-sdk/groq", () => ({
+  groq: (id: string) => ({ modelId: id }),
 }));
 
 import {
   REFLECTION_MODEL_ID,
+  REFLECTION_MODEL_USED,
   REFLECTION_SYSTEM_PROMPT,
   generateReflection,
   serializeReflectionPrompt,
@@ -56,6 +57,9 @@ describe("generateReflection prompt payload", () => {
 
     expect(request.model.modelId).toBe(REFLECTION_MODEL_ID);
     expect(request.schema).toBe(ReflectionReportSchema);
+    expect(
+      (request as { maxRetries?: number }).maxRetries,
+    ).toBe(0);
     expect(request.system).toBe(REFLECTION_SYSTEM_PROMPT);
     expect(request.system).toMatch(/judgmental language/i);
     expect(request.system).toMatch(/diagnose the user/i);
@@ -93,7 +97,7 @@ describe("generateReflection prompt payload", () => {
     expect(sent).not.toContain("flow_interactions");
 
     expect(report).toEqual(validReport);
-    expect(model_used).toBe(REFLECTION_MODEL_ID);
+    expect(model_used).toBe(REFLECTION_MODEL_USED);
   });
 
   it("rejects extra keys before they can reach generateObject", () => {
@@ -108,5 +112,23 @@ describe("generateReflection prompt payload", () => {
       ]),
     ).toThrow(/Unrecognized key/i);
     expect(generateObjectMock).not.toHaveBeenCalled();
+  });
+
+  it("maps a Groq 429 to groq_rate_limited without retrying", async () => {
+    const rateLimited = Object.assign(new Error("Rate limit reached for model"), {
+      statusCode: 429,
+    });
+    generateObjectMock.mockRejectedValue(rateLimited);
+
+    const metrics = metricsForReflection("framing-headlines", [
+      { metric_name: "framing_bias", metric_value: 1 },
+    ]);
+
+    await expect(generateReflection(metrics)).rejects.toThrow("groq_rate_limited");
+    expect(generateObjectMock).toHaveBeenCalledOnce();
+    const request = generateObjectMock.mock.calls[0]?.[0] as {
+      maxRetries: number;
+    };
+    expect(request.maxRetries).toBe(0);
   });
 });

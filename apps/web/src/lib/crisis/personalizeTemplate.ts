@@ -1,4 +1,4 @@
-import { openai } from "@ai-sdk/openai";
+import { groq } from "@ai-sdk/groq";
 import { getMessageTemplate } from "@isitfr/content-config";
 import {
   PersonalizeTemplatePromptSchema,
@@ -8,9 +8,13 @@ import {
 import { generateObject } from "ai";
 import { z } from "zod";
 
+import {
+  GROQ_GENERATE_MAX_RETRIES,
+  isProviderRateLimitError,
+} from "@/lib/ai/groqLimits";
 import { NAME_TOKEN, withNameToken } from "@/lib/crisis/namePlaceholder";
 
-export const PERSONALIZE_MODEL_ID = "gpt-4o-mini";
+export const PERSONALIZE_MODEL_ID = "llama-3.3-70b-versatile";
 export const PERSONALIZE_SERVER_TIMEOUT_MS = 8_000;
 
 /**
@@ -47,13 +51,22 @@ export async function personalizeTemplate(
 ): Promise<PersonalizeTemplateResponse> {
   const source = getMessageTemplate(templateKey);
   const prompt = serializePersonalizePrompt(source.body);
-  const { object } = await generateObject({
-    model: openai(PERSONALIZE_MODEL_ID),
-    schema: PersonalizedBodySchema,
-    system: PERSONALIZE_SYSTEM_PROMPT,
-    prompt,
-    abortSignal: AbortSignal.timeout(PERSONALIZE_SERVER_TIMEOUT_MS),
-  });
+  let object;
+  try {
+    ({ object } = await generateObject({
+      model: groq(PERSONALIZE_MODEL_ID),
+      schema: PersonalizedBodySchema,
+      system: PERSONALIZE_SYSTEM_PROMPT,
+      prompt,
+      abortSignal: AbortSignal.timeout(PERSONALIZE_SERVER_TIMEOUT_MS),
+      maxRetries: GROQ_GENERATE_MAX_RETRIES,
+    }));
+  } catch (err) {
+    if (isProviderRateLimitError(err)) {
+      throw new Error("groq_rate_limited");
+    }
+    throw err;
+  }
   return PersonalizeTemplateResponseSchema.parse({
     title: source.title ?? source.key,
     body: object.body,

@@ -42,4 +42,21 @@ describe("fetchReflection", () => {
       "reflection_unavailable",
     );
   });
+
+  it("treats a Groq 429 as unavailable so the report can show try-again", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue({
+        ok: false,
+        status: 429,
+        json: async () => ({
+          error: { code: "reflection_failed", message: "groq_rate_limited" },
+        }),
+      }),
+    );
+
+    await expect(fetchReflection("session-1")).rejects.toThrow(
+      "reflection_unavailable",
+    );
+  });
 });
