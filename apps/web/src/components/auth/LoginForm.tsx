@@ -14,7 +14,11 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
-import { authCallbackUrl, RESET_PASSWORD_PATH } from "@/lib/auth/paths";
+import {
+  authCallbackUrl,
+  authEmailCallbackUrl,
+  RESET_PASSWORD_PATH,
+} from "@/lib/auth/paths";
 import { createClient } from "@/lib/supabase/client";
 import { ensureProfile } from "@/lib/supabase/profile";
 
@@ -57,10 +61,7 @@ export function LoginForm({ nextPath, initialError }: LoginFormProps) {
         const { error: resetError } = await supabase.auth.resetPasswordForEmail(
           email,
           {
-            redirectTo: authCallbackUrl(
-              window.location.origin,
-              RESET_PASSWORD_PATH,
-            ),
+            redirectTo: authEmailCallbackUrl(RESET_PASSWORD_PATH),
           },
         );
         if (resetError) {
@@ -75,7 +76,7 @@ export function LoginForm({ nextPath, initialError }: LoginFormProps) {
           email,
           password,
           options: {
-            emailRedirectTo: authCallbackUrl(window.location.origin, nextPath),
+            emailRedirectTo: authEmailCallbackUrl(nextPath),
           },
         });
         if (signUpError) {

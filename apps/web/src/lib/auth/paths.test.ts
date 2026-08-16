@@ -1,49 +1,61 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { authCallbackUrl, authRedirectOrigin } from "./paths";
+import {
+  authCallbackUrl,
+  authEmailCallbackUrl,
+  authEmailRedirectOrigin,
+  authRedirectOrigin,
+  CANONICAL_SITE_ORIGIN,
+} from "./paths";
+
+describe("authEmailRedirectOrigin", () => {
+  afterEach(() => {
+    vi.unstubAllEnvs();
+  });
+
+  it("uses NEXT_PUBLIC_SITE_URL when set", () => {
+    vi.stubEnv("NEXT_PUBLIC_SITE_URL", "https://isitfr.vercel.app");
+    expect(authEmailRedirectOrigin()).toBe("https://isitfr.vercel.app");
+  });
+
+  it("falls back to the canonical production origin so Vercel emails never target localhost", () => {
+    vi.stubEnv("NEXT_PUBLIC_SITE_URL", "");
+    expect(authEmailRedirectOrigin()).toBe(CANONICAL_SITE_ORIGIN);
+  });
+});
 
 describe("authRedirectOrigin", () => {
   afterEach(() => {
     vi.unstubAllEnvs();
   });
 
-  it("rewrites localhost to NEXT_PUBLIC_SITE_URL so reset emails do not target the dev server", () => {
-    vi.stubEnv("NEXT_PUBLIC_SITE_URL", "https://isitfr.vercel.app");
+  it("keeps the page origin for in-browser OAuth", () => {
     expect(authRedirectOrigin("http://localhost:3000")).toBe(
-      "https://isitfr.vercel.app",
-    );
-    expect(authRedirectOrigin("http://127.0.0.1:3456")).toBe(
-      "https://isitfr.vercel.app",
-    );
-  });
-
-  it("keeps a non-local origin (production or preview)", () => {
-    vi.stubEnv("NEXT_PUBLIC_SITE_URL", "https://isitfr.vercel.app");
-    expect(authRedirectOrigin("https://isitfr.vercel.app")).toBe(
-      "https://isitfr.vercel.app",
+      "http://localhost:3000",
     );
     expect(
       authRedirectOrigin("https://isitfr-git-preview.vercel.app"),
     ).toBe("https://isitfr-git-preview.vercel.app");
   });
+});
 
-  it("stays on localhost when no canonical site URL is set", () => {
+describe("authEmailCallbackUrl", () => {
+  afterEach(() => {
+    vi.unstubAllEnvs();
+  });
+
+  it("points recovery at the canonical origin callback, ignoring the current page", () => {
     vi.stubEnv("NEXT_PUBLIC_SITE_URL", "");
-    expect(authRedirectOrigin("http://localhost:3000")).toBe(
-      "http://localhost:3000",
+    expect(authEmailCallbackUrl("/login/reset")).toBe(
+      `${CANONICAL_SITE_ORIGIN}/auth/callback?next=%2Flogin%2Freset`,
     );
   });
 });
 
 describe("authCallbackUrl", () => {
-  afterEach(() => {
-    vi.unstubAllEnvs();
-  });
-
-  it("points recovery at the canonical origin callback", () => {
-    vi.stubEnv("NEXT_PUBLIC_SITE_URL", "https://isitfr.vercel.app");
-    expect(authCallbackUrl("http://localhost:3000", "/login/reset")).toBe(
-      "https://isitfr.vercel.app/auth/callback?next=%2Flogin%2Freset",
+  it("keeps OAuth on the page origin", () => {
+    expect(authCallbackUrl("http://localhost:3000", "/train")).toBe(
+      "http://localhost:3000/auth/callback?next=%2Ftrain",
     );
   });
 });

@@ -16,8 +16,7 @@ describe("LoginForm copy", () => {
     const src = readFileSync(resolve(__dirname, "LoginForm.tsx"), "utf8");
     expect(src).toMatch(/getAuthChrome/);
     expect(src).toMatch(/resetPasswordForEmail/);
-    expect(src).toMatch(/authCallbackUrl/);
-    expect(src).toMatch(/RESET_PASSWORD_PATH/);
+    expect(src).toMatch(/authEmailCallbackUrl\(RESET_PASSWORD_PATH\)/);
     expect(src).not.toMatch(/Forgot password\?/);
     expect(src).not.toMatch(
       /redirectTo: `\$\{window\.location\.origin\}\/auth\/callback/,
