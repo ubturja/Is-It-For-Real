@@ -8,9 +8,12 @@ one shared engine.
 
 ## 2. User Journeys (kept deliberately separate — never merged in UI)
 
-**Training path** (`/train`, requires account): dashboard of experiments → pick one →
-go through an interactive scenario without knowing what's being measured → get an
-AI-generated reflection report → profile builds over time.
+**Training path** (`/train`, requires account): sign in → dashboard of experiments →
+pick one → go through an interactive scenario without knowing what's being measured →
+get an AI-generated reflection report → profile builds over time. Results
+(`flow_sessions`, `flow_interactions`, `flow_scores`, and the profile rollup)
+are saved automatically once you're signed in. There is no local-only training
+run and no separate "save my results" step.
 
 **Crisis path** (`/help`, no account, ever): one tap → five fixed steps (stop,
 preserve evidence, choose who to tell, send a template message, get resources) →
@@ -82,8 +85,8 @@ export const FlowConfigSchema = z.object({
   flowId: z.string(),
   version: z.number().int().positive(),
   type: z.enum(["crisis", "experiment"]),
-  title: z.string(),
-  track: z.string().optional(),   // required when type is experiment
+  title: z.string(),              // /train display title — not the construct
+  track: z.string().optional(),   // required when type is experiment; internal (profile/radar), never listed on /train
   teaser: z.string().optional(),  // required when type is experiment
   skin: z.enum(["chat-bubble"]).optional(), // presentation only; engine ignores
   initial: z.string(),
@@ -110,7 +113,8 @@ does not silently disappear from the list.
 action buttons, and empty-state copy for STOP / PRESERVE / BRANCH / TEMPLATE /
 RESOURCES / MEASURE live in
 `packages/content-config/src/chrome/stepChrome.en.json`, loaded via
-`getStepChrome()`. They are shared UI chrome for every flow. Scenario copy
+`getStepChrome()`. They are shared UI chrome for every flow. MEASURE chrome is
+an in-scene label, never the word "Measure". Scenario copy
 (`prompt`, `why`, option labels, templates, resources, `payload`) stays on
 the flow JSON. Do not hardcode chrome strings in
 `apps/web/src/components/flow-steps`.
@@ -262,7 +266,9 @@ flowchart LR
 3. `packages/engine` is framework-agnostic — no React, no Supabase, importable by `apps/web` and the parked `apps/edge-api`.
 4. Crisis Mode (`/help`) must work with zero auth, forever, and with zero
    network calls after first load **except** the optional personalize tap in
-   §2. Completing Crisis Mode must never depend on that request.
+   §2. Completing Crisis Mode must never depend on that request. Training is
+   the opposite contract: `/train` requires an account, and signed-in runs
+   persist to Supabase as you go (not opt-in, not on-device-only).
 5. Deterministic scoring stays separate from the LLM — the model never
    generates the sequence of safety steps, only rewords already-fixed content
    (Crisis template personalize) or describes already-computed scores

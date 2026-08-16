@@ -57,13 +57,11 @@ export {
 } from "./reflection";
 
 export {
-  PersonalizeTemplateContextSchema,
   PersonalizeTemplateRequestSchema,
   PersonalizeTemplateResponseSchema,
   PersonalizeTemplatePromptSchema,
   validatePersonalizeTemplateRequest,
   validatePersonalizeTemplateResponse,
-  type PersonalizeTemplateContext,
   type PersonalizeTemplateRequest,
   type PersonalizeTemplateResponse,
   type PersonalizeTemplatePrompt,

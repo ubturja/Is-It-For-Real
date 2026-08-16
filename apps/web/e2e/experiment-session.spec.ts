@@ -54,7 +54,10 @@ test.describe("Experiment session persistence", () => {
 
     const grant = await loginViaPasswordUi(page, email, password, STUB_PATH);
 
-    await expect(page.getByText("Measure", { exact: true })).toBeVisible();
+    await expect(
+      page.getByText(getStepChrome().stepTypes.MEASURE.title, { exact: true }),
+    ).toBeVisible();
+    await expect(page.getByText("Measure", { exact: true })).toHaveCount(0);
     await expect(
       page.getByText("Stub probe — not real experiment content."),
     ).toBeVisible();
@@ -181,7 +184,10 @@ test.describe("Experiment session persistence", () => {
 
     await loginViaPasswordUi(page, email, password, STUB_PATH);
 
-    await expect(page.getByText("Measure", { exact: true })).toBeVisible();
+    await expect(
+      page.getByText(getStepChrome().stepTypes.MEASURE.title, { exact: true }),
+    ).toBeVisible();
+    await expect(page.getByText("Measure", { exact: true })).toHaveCount(0);
     await page.getByRole("button", { name: "Continue" }).click();
     await expect(page.getByText("Stub complete.")).toBeVisible();
     await expect(page.getByRole("status")).toHaveText(unsaved);
@@ -207,7 +213,10 @@ test.describe("Experiment session persistence", () => {
 
     await loginViaPasswordUi(page, email, password, STUB_PATH);
 
-    await expect(page.getByText("Measure", { exact: true })).toBeVisible();
+    await expect(
+      page.getByText(getStepChrome().stepTypes.MEASURE.title, { exact: true }),
+    ).toBeVisible();
+    await expect(page.getByText("Measure", { exact: true })).toHaveCount(0);
     await expect(page.getByRole("status")).toHaveText(unsaved);
     await page.getByRole("button", { name: "Continue" }).click();
     await expect(page.getByText("Stub complete.")).toBeVisible();

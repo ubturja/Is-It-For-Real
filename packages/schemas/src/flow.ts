@@ -111,8 +111,10 @@ export const FlowConfigSchema = z
     version: z.number().int().positive(),
     type: z.enum(["crisis", "experiment"]),
     title: z.string(),
-    // Dashboard listing (experiments): track + teaser, never spoil "what it tests".
+    // Internal construct name (profile / radar). Required on experiments.
+    // /train listing uses `title`, never this field.
     track: z.string().optional(),
+    // Dashboard listing copy — in-scene, not the construct name.
     teaser: z.string().optional(),
     // Presentation only — ignored by the engine. "chat-bubble" restyles
     // StepRenderer output; it is not a step type.

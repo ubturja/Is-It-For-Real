@@ -15,7 +15,7 @@ describe("validateStepChrome", () => {
           STOP: {},
           PRESERVE: { title: "Preserve evidence" },
           BRANCH: { title: "Choose a path" },
-          MEASURE: { title: "Measure" },
+          MEASURE: { title: "Your take" },
           TEMPLATE: { titleFallback: "Message template" },
           RESOURCES: {
             eyebrow: "Done for now",
@@ -35,6 +35,44 @@ describe("validateStepChrome", () => {
         },
       }),
     ).toThrow(/title/i);
+  });
+
+  it("rejects MEASURE chrome titled Measure", () => {
+    expect(() =>
+      validateStepChrome({
+        locale: "en",
+        stepTypes: {
+          STOP: { title: "Stop" },
+          PRESERVE: { title: "Preserve evidence" },
+          BRANCH: { title: "Choose a path" },
+          MEASURE: { title: "Measure" },
+          TEMPLATE: {
+            titleFallback: "Message template",
+            nameLabel: "A name",
+            namePlaceholder: "Name",
+            personalize: "Reword",
+          },
+          RESOURCES: {
+            eyebrow: "Done for now",
+            titleFallback: "Resources",
+          },
+        },
+        empty: {
+          resources: "No resources are available for this step.",
+          template: "No message template is available for this step.",
+        },
+        actions: {
+          continue: "Continue",
+          finish: "Finish",
+          open: "Open",
+          copy: "Copy to clipboard",
+          copied: "Copied",
+        },
+        persist: {
+          unsaved: "Your progress may not have saved.",
+        },
+      }),
+    ).toThrow(/Measure/);
   });
 });
 

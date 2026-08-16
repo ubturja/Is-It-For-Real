@@ -22,7 +22,7 @@ cp apps/web/.env.local.example apps/web/.env.local
 pnpm --filter web dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000). `/help` works without an account. `/train` requires email/password (or Google once the Auth redirect allow-list includes this origin).
+Open [http://localhost:3000](http://localhost:3000). `/help` works without an account. `/train` requires an account; results are saved automatically once you're signed in (email/password, or Google once the Auth redirect allow-list includes this origin).
 
 Production Auth redirects (Dashboard → Authentication → URL configuration):
 

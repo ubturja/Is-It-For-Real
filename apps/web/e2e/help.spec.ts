@@ -15,8 +15,15 @@ import {
   waitForServiceWorkerControl,
 } from "./helpers/crisis";
 import { attachCrisisNetworkLog } from "./helpers/crisisNetwork";
+import { expectNoTrainingNav } from "./helpers/nav";
 
 test.describe("Crisis Mode /help", () => {
+  test("shows no Train or Profile navigation", async ({ page }) => {
+    await page.goto("/help");
+    await expectStopStep(page);
+    await expectNoTrainingNav(page);
+  });
+
   test("fresh context completes trusted-adult branch to resources", async ({
     page,
   }) => {

@@ -15,14 +15,14 @@
     },
     {
       "eyebrow": "What you do here",
-      "body": "You run short experiments without being told what they score. If it is happening now, you follow five fixed steps — stop, save what you saw, choose who to tell, send a message, get resources. That path never asks you to sign in."
+      "body": "You run short experiments without being told what they score — that path needs an account, and results save as you go. If it is happening now, you follow five fixed steps — stop, save what you saw, choose who to tell, send a message, get resources. That path never asks you to sign in."
     }
   ],
   "entries": [
     {
       "kind": "practice",
       "eyebrow": "Practice",
-      "body": "Try experiments that put you inside the trick. You will need an account.",
+      "body": "Try experiments that put you inside the trick. You will need an account; results are saved automatically once you're signed in.",
       "action": "Start practicing"
     },
     {

@@ -4,7 +4,7 @@
     "STOP": { "title": "Stop" },
     "PRESERVE": { "title": "Preserve evidence" },
     "BRANCH": { "title": "Choose a path" },
-    "MEASURE": { "title": "Measure" },
+    "MEASURE": { "title": "Your take" },
     "TEMPLATE": {
       "titleFallback": "Message template",
       "nameLabel": "A name to include (optional)",

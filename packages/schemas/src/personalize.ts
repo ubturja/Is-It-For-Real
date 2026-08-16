@@ -1,16 +1,9 @@
 import { z } from "zod";
 
-/** Bounded optional context — name is never forwarded to the model. */
-export const PersonalizeTemplateContextSchema = z
-  .object({
-    name: z.string().trim().min(1).max(80).optional(),
-  })
-  .strict();
-
+/** Wire body is the template key only — never a typed name or planner fields. */
 export const PersonalizeTemplateRequestSchema = z
   .object({
     templateKey: z.string().min(1).max(120),
-    context: PersonalizeTemplateContextSchema.optional().default({}),
   })
   .strict();
 
@@ -21,9 +14,6 @@ export const PersonalizeTemplateResponseSchema = z
   })
   .strict();
 
-export type PersonalizeTemplateContext = z.infer<
-  typeof PersonalizeTemplateContextSchema
->;
 export type PersonalizeTemplateRequest = z.infer<
   typeof PersonalizeTemplateRequestSchema
 >;

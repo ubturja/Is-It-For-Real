@@ -1,5 +1,6 @@
 "use client";
 
+import { getDashboardChrome } from "@isitfr/content-config";
 import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
 
@@ -109,9 +110,7 @@ export function LoginForm({ nextPath, initialError }: LoginFormProps) {
         <CardTitle className="text-xl" role="heading" aria-level={1}>
           {mode === "signin" ? "Sign in" : "Create account"}
         </CardTitle>
-        <CardDescription>
-          Train requires an account. Crisis help at /help never does.
-        </CardDescription>
+        <CardDescription>{getDashboardChrome().account}</CardDescription>
       </CardHeader>
 
       <CardContent className="space-y-4">

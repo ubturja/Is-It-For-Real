@@ -62,6 +62,7 @@ test.describe("Echo Chamber experiment", () => {
     await expect(
       page.getByText("A short feed — open what you would tap, then continue."),
     ).toBeVisible();
+    await expect(page.getByText("Measure", { exact: true })).toHaveCount(0);
     await expect(page.getByText(CLIMATE_HEADLINE)).toBeVisible();
 
     const continueButton = page.getByRole("button", { name: "Continue" });
