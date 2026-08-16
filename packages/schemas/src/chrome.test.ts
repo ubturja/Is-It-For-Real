@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  validateAuthChrome,
   validateDashboardChrome,
   validateLandingChrome,
   validateReportChrome,
@@ -170,5 +171,31 @@ describe("validateDashboardChrome", () => {
         profile: "Your profile",
       }),
     ).toThrow(/intro/i);
+  });
+});
+
+describe("validateAuthChrome", () => {
+  it("rejects chrome missing the forgot sent copy", () => {
+    expect(() =>
+      validateAuthChrome({
+        locale: "en",
+        forgot: {
+          link: "Forgot password?",
+          title: "Reset password",
+          description: "Enter your email.",
+          submit: "Send reset link",
+          back: "Back to sign in",
+        },
+        reset: {
+          title: "Choose a new password",
+          description: "Pick a new password.",
+          password: "New password",
+          confirm: "Confirm password",
+          submit: "Update password",
+          mismatch: "Passwords do not match.",
+          missingSession: "This reset link is invalid or has expired.",
+        },
+      }),
+    ).toThrow(/sent/i);
   });
 });

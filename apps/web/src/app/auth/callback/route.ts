@@ -11,8 +11,9 @@ function safeNextPath(next: string | null): string {
 }
 
 /**
- * OAuth / email-confirm callback: exchange code for session, upsert profiles,
- * then send the user to `next` (default /train).
+ * OAuth / email-confirm / password-recovery callback: exchange code for
+ * session, upsert profiles, then send the user to `next` (default /train).
+ * Recovery emails set next=/login/reset so the user can choose a new password.
  */
 export async function GET(request: Request) {
   const url = new URL(request.url);

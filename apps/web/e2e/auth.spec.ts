@@ -7,6 +7,7 @@ import {
   requireE2EAccount,
   requirePublicSupabaseEnv,
 } from "./helpers/auth";
+import { getAuthChrome } from "./helpers/content";
 
 test.describe("Auth boundary", () => {
   test("unauthenticated GET /train redirects to /login with next=/train", async ({
@@ -98,5 +99,45 @@ test.describe("Auth boundary", () => {
 
     expect(profileError).toBeNull();
     expect(profile?.user_id).toBe(grant.user.id);
+  });
+
+  test("forgot password requests a reset without revealing whether the email exists", async ({
+    page,
+  }) => {
+    const recoverPosts: string[] = [];
+    await page.route("**/auth/v1/recover**", async (route) => {
+      recoverPosts.push(route.request().postData() ?? "");
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: "{}",
+      });
+    });
+
+    const chrome = getAuthChrome();
+    await page.goto("/login");
+    await page.getByRole("button", { name: chrome.forgot.link }).click();
+    await expect(
+      page.getByRole("heading", { name: chrome.forgot.title }),
+    ).toBeVisible();
+
+    await page.getByLabel("Email").fill("reset-test@example.com");
+    await page.getByRole("button", { name: chrome.forgot.submit }).click();
+
+    await expect(page.getByRole("status")).toHaveText(chrome.forgot.sent);
+    expect(recoverPosts.length).toBeGreaterThan(0);
+  });
+
+  test("reset page without a recovery session asks for a new link", async ({
+    page,
+  }) => {
+    const chrome = getAuthChrome();
+    await page.goto("/login/reset");
+    await expect(page.getByRole("status")).toHaveText(
+      chrome.reset.missingSession,
+    );
+    await expect(
+      page.getByRole("link", { name: chrome.forgot.back }),
+    ).toBeVisible();
   });
 });

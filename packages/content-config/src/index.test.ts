@@ -7,7 +7,7 @@ import { compileFlowToMachine } from "@isitfr/engine";
 import { validateFlowConfig } from "@isitfr/schemas";
 import { interpret } from "xstate";
 
-import { getDashboardChrome, getFeed, getFlow, getLandingChrome, getMessageTemplate, getProfileChrome, getReportChrome, getResources, getStepChrome, listExperiments, listFlows } from "./index";
+import { getAuthChrome, getDashboardChrome, getFeed, getFlow, getLandingChrome, getMessageTemplate, getProfileChrome, getReportChrome, getResources, getStepChrome, listExperiments, listFlows } from "./index";
 
 const FLOWS_DIR = join(dirname(fileURLToPath(import.meta.url)), "flows");
 const FLOW_FILENAME_RE = /\.v.+\.json$/;
@@ -683,6 +683,15 @@ describe("getDashboardChrome", () => {
     expect(chrome.account.toLowerCase()).toMatch(/account/);
     expect(chrome.account.toLowerCase()).toMatch(/saved automatically/);
     expect(chrome.intro.toLowerCase()).toMatch(/saved automatically/);
+  });
+});
+
+describe("getAuthChrome", () => {
+  it("loads forgot-password copy without claiming a reset was sent for a missing account", () => {
+    const chrome = getAuthChrome();
+    expect(chrome.forgot.link.length).toBeGreaterThan(0);
+    expect(chrome.forgot.sent.toLowerCase()).toMatch(/if an account exists/);
+    expect(chrome.reset.missingSession.toLowerCase()).toMatch(/expired|invalid/);
   });
 });
 

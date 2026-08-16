@@ -44,6 +44,20 @@ export type ProfileChromeFile = {
   empty: { title: string; body: string; action: string };
 };
 
+export type AuthChromeFile = {
+  forgot: {
+    link: string;
+    title: string;
+    submit: string;
+    sent: string;
+    back: string;
+  };
+  reset: {
+    title: string;
+    missingSession: string;
+  };
+};
+
 export type StepChromeFile = {
   stepTypes: {
     STOP: { title: string };
@@ -78,6 +92,10 @@ export function getReportChrome(): ReportChromeFile {
 
 export function getProfileChrome(): ProfileChromeFile {
   return readJson<ProfileChromeFile>("chrome/profileChrome.en.json");
+}
+
+export function getAuthChrome(): AuthChromeFile {
+  return readJson<AuthChromeFile>("chrome/authChrome.en.json");
 }
 
 export function getStepChrome(): StepChromeFile {

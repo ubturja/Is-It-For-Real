@@ -1,0 +1,20 @@
+{
+  "locale": "en",
+  "forgot": {
+    "link": "Forgot password?",
+    "title": "Reset password",
+    "description": "Enter the email for your training account. If it exists, we'll send a link to choose a new password.",
+    "submit": "Send reset link",
+    "sent": "If an account exists for that email, a reset link is on its way. Check your inbox.",
+    "back": "Back to sign in"
+  },
+  "reset": {
+    "title": "Choose a new password",
+    "description": "Pick a new password for your training account.",
+    "password": "New password",
+    "confirm": "Confirm password",
+    "submit": "Update password",
+    "mismatch": "Passwords do not match.",
+    "missingSession": "This reset link is invalid or has expired. Request a new one from the sign-in page."
+  }
+}
