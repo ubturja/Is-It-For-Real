@@ -7,9 +7,9 @@ import {
   isSupabaseRestWrite,
   loginViaPasswordUi,
 } from "./helpers/auth";
-import { completeTrustedAdultFlow } from "./helpers/crisis";
+import { completeTrustedAdultFlow, expectStopStep } from "./helpers/crisis";
 import { expectTrainDashboard } from "./helpers/experiments";
-import { snapshotPublicRows } from "./helpers/supabaseSnapshot";
+import { snapshotRowsForUser } from "./helpers/supabaseSnapshot";
 
 test.describe("Cross-path isolation", () => {
   test("Crisis Mode stays login-free and creates no Supabase rows while a training session is live", async ({
@@ -26,7 +26,7 @@ test.describe("Cross-path isolation", () => {
       expect(grant.user.id).toBe(userId);
       await expectTrainDashboard(page);
 
-      const before = await snapshotPublicRows(admin);
+      const before = await snapshotRowsForUser(admin, userId);
 
       const restWrites: string[] = [];
       page.on("request", (request) => {
@@ -35,9 +35,10 @@ test.describe("Cross-path isolation", () => {
         }
       });
 
-      await page.getByRole("link", { name: "Help" }).click();
+      await page.getByRole("link", { name: "Help", exact: true }).click();
       await expect.poll(() => new URL(page.url()).pathname).toBe("/help");
       await expect(page).not.toHaveURL(/\/login/);
+      await expectStopStep(page);
 
       await completeTrustedAdultFlow(page);
 
@@ -49,7 +50,7 @@ test.describe("Cross-path isolation", () => {
         `Crisis Mode must not write Supabase REST rows; saw:\n${restWrites.join("\n")}`,
       ).toEqual([]);
 
-      const after = await snapshotPublicRows(admin);
+      const after = await snapshotRowsForUser(admin, userId);
       expect(after).toEqual(before);
     } finally {
       await deleteUserAndTrainingRows(admin, userId);

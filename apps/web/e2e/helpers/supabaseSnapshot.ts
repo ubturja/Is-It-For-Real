@@ -1,13 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 
-const ROW_TABLES = [
-  "flow_sessions",
-  "flow_interactions",
-  "flow_scores",
-  "reports",
-  "profiles",
-] as const;
-
 export type PublicRowSnapshot = {
   flow_sessions: string[];
   flow_interactions: string[];
@@ -34,55 +26,80 @@ function isProfileIdRow(value: unknown): value is { user_id: string } {
   );
 }
 
-async function listIds(
+/**
+ * Row ids owned by one auth user. Isolation tests must not snapshot the
+ * whole hosted project — the parallel a11y CI job writes other users' rows.
+ */
+export async function snapshotRowsForUser(
   admin: SupabaseClient,
-  table: (typeof ROW_TABLES)[number],
-): Promise<string[]> {
-  if (table === "profiles") {
-    const { data, error } = await admin.from(table).select("user_id");
+  userId: string,
+): Promise<PublicRowSnapshot> {
+  const { data: profileRows, error: profileError } = await admin
+    .from("profiles")
+    .select("user_id")
+    .eq("user_id", userId);
+  if (profileError) {
+    throw new Error(`profiles: ${profileError.message}`);
+  }
+
+  const { data: sessionRows, error: sessionError } = await admin
+    .from("flow_sessions")
+    .select("id")
+    .eq("user_id", userId);
+  if (sessionError) {
+    throw new Error(`flow_sessions: ${sessionError.message}`);
+  }
+
+  const flow_sessions = (sessionRows ?? [])
+    .map((row) => {
+      if (!isIdRow(row)) {
+        throw new Error("flow_sessions row missing id");
+      }
+      return row.id;
+    })
+    .sort();
+
+  const childIds = async (
+    table: "flow_interactions" | "flow_scores" | "reports",
+  ): Promise<string[]> => {
+    if (flow_sessions.length === 0) {
+      return [];
+    }
+    const { data, error } = await admin
+      .from(table)
+      .select("id")
+      .in("session_id", flow_sessions);
     if (error) {
       throw new Error(`${table}: ${error.message}`);
     }
     return (data ?? [])
       .map((row) => {
-        if (!isProfileIdRow(row)) {
-          throw new Error(`${table} row missing user_id`);
+        if (!isIdRow(row)) {
+          throw new Error(`${table} row missing id`);
         }
-        return row.user_id;
+        return row.id;
       })
       .sort();
-  }
+  };
 
-  const { data, error } = await admin.from(table).select("id");
-  if (error) {
-    throw new Error(`${table}: ${error.message}`);
-  }
-  return (data ?? [])
-    .map((row) => {
-      if (!isIdRow(row)) {
-        throw new Error(`${table} row missing id`);
-      }
-      return row.id;
-    })
-    .sort();
-}
-
-export async function snapshotPublicRows(
-  admin: SupabaseClient,
-): Promise<PublicRowSnapshot> {
-  const [
-    flow_sessions,
-    flow_interactions,
-    flow_scores,
-    reports,
-    profiles,
-  ] = await Promise.all(ROW_TABLES.map((table) => listIds(admin, table)));
+  const [flow_interactions, flow_scores, reports] = await Promise.all([
+    childIds("flow_interactions"),
+    childIds("flow_scores"),
+    childIds("reports"),
+  ]);
 
   return {
     flow_sessions,
     flow_interactions,
     flow_scores,
     reports,
-    profiles,
+    profiles: (profileRows ?? [])
+      .map((row) => {
+        if (!isProfileIdRow(row)) {
+          throw new Error("profiles row missing user_id");
+        }
+        return row.user_id;
+      })
+      .sort(),
   };
 }
