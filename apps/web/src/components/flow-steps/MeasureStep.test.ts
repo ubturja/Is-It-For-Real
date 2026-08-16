@@ -10,6 +10,7 @@ describe("MeasureStep silent auto-advance", () => {
     expect(src).toMatch(/chrome\.actions\.continue/);
     expect(src).toMatch(/autoAdvanceSilentMeasure/);
     expect(src).toMatch(/onAdvance\(\)/);
-    expect(src).not.toMatch(/Continue\./);
+    expect(src).toMatch(/chrome\.stepTypes\.MEASURE\.title/);
+    expect(src).not.toMatch(/"Measure"/);
   });
 });

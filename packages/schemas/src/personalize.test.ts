@@ -6,46 +6,42 @@ import {
   validatePersonalizeTemplateResponse,
 } from "./personalize";
 
+const TEMPLATE_KEY = "crisis-deepfake-classmate-trusted-adult";
+
 describe("validatePersonalizeTemplateRequest", () => {
-  it("accepts a template key with an optional name", () => {
+  it("accepts a template key only", () => {
     expect(
       validatePersonalizeTemplateRequest({
-        templateKey: "crisis-deepfake-classmate-trusted-adult",
-        context: { name: "Alex" },
+        templateKey: TEMPLATE_KEY,
       }),
     ).toEqual({
-      templateKey: "crisis-deepfake-classmate-trusted-adult",
-      context: { name: "Alex" },
+      templateKey: TEMPLATE_KEY,
     });
   });
 
-  it("defaults context to empty", () => {
-    expect(
-      validatePersonalizeTemplateRequest({
-        templateKey: "crisis-deepfake-classmate-trusted-adult",
-      }),
-    ).toEqual({
-      templateKey: "crisis-deepfake-classmate-trusted-adult",
-      context: {},
-    });
-  });
-
-  it("rejects extra context keys so this cannot become a planner", () => {
+  it("rejects a leftover name field on the wire", () => {
     expect(() =>
       validatePersonalizeTemplateRequest({
-        templateKey: "crisis-deepfake-classmate-trusted-adult",
-        context: { name: "Alex", plan: "call the police" },
+        templateKey: TEMPLATE_KEY,
+        name: "Alex",
+      }),
+    ).toThrow(/Unrecognized key/i);
+
+    expect(() =>
+      validatePersonalizeTemplateRequest({
+        templateKey: TEMPLATE_KEY,
+        context: { name: "Alex" },
       }),
     ).toThrow(/Unrecognized key/i);
   });
 
-  it("rejects a name that is too long", () => {
+  it("rejects extra planner keys so this cannot become a prompt bag", () => {
     expect(() =>
       validatePersonalizeTemplateRequest({
-        templateKey: "crisis-deepfake-classmate-trusted-adult",
-        context: { name: "x".repeat(81) },
+        templateKey: TEMPLATE_KEY,
+        plan: "call the police",
       }),
-    ).toThrow(/name/i);
+    ).toThrow(/Unrecognized key/i);
   });
 });
 

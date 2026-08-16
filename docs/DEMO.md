@@ -14,7 +14,7 @@ Crisis Mode must not create a Supabase row. It is a separate product surface fro
 ## 2. Train (`/train`) — account required
 
 1. Sign in (email/password). Google works once the production callback is on the Supabase Auth allow-list.
-2. From the dashboard, run one experiment (Framing, Echo Chamber, Memory, or Read the Room). You should not be told what is being scored while you play.
+2. From the dashboard, run one experiment (Framing, Echo Chamber, Memory, or Read the Room). You should not be told what is being scored while you play. Sessions, interactions, and scores write to Supabase as you go — there is no local-only training run and no extra "save" tap.
 3. At the end, the reflection report replaces the last step.
 4. Open **Your profile**. After all four scored experiments, the radar shows four dimensions.
 

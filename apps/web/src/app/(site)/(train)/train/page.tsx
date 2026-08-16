@@ -44,11 +44,8 @@ export default function TrainPage() {
             >
               <Card className="h-full transition-colors hover:bg-muted/40">
                 <CardHeader>
-                  <CardDescription className="text-xs font-medium tracking-wide uppercase">
-                    {experiment.track}
-                  </CardDescription>
                   <CardTitle className="text-lg">{experiment.title}</CardTitle>
-                  <CardDescription className="mt-1 text-sm normal-case tracking-normal">
+                  <CardDescription className="mt-1 text-sm">
                     {experiment.teaser}
                   </CardDescription>
                 </CardHeader>

@@ -1,6 +1,7 @@
 {
   "locale": "en",
   "title": "Train",
-  "intro": "Pick a scenario and go through it without knowing what is being measured.",
-  "profile": "Your profile"
+  "intro": "Pick a scenario and go through it without knowing what is being measured. Your results are saved automatically as you go.",
+  "profile": "Your profile",
+  "account": "Training requires an account. Your results are saved automatically once you're signed in. Crisis help at /help never does."
 }

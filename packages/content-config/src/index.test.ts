@@ -485,12 +485,28 @@ describe("listExperiments", () => {
 
     for (const experiment of experiments) {
       expect(experiment.title.length).toBeGreaterThan(0);
-      expect(experiment.track.length).toBeGreaterThan(0);
       expect(experiment.teaser.length).toBeGreaterThan(0);
+      expect(experiment).not.toHaveProperty("track");
       expect(experiment.teaser.toLowerCase()).not.toMatch(
         /metric|score|test(s|ing)? your/,
       );
     }
+
+    expect(experiments.map((e) => e.title).sort()).toEqual(
+      ["After the clip", "The group chat", "Three takes", "Your feed"].sort(),
+    );
+    const listing = experiments
+      .map((e) => `${e.title} ${e.teaser}`)
+      .join("\n");
+    expect(listing).not.toMatch(/\bFraming\b/);
+    expect(listing).not.toMatch(/\bEcho\b/);
+    expect(listing).not.toMatch(/\bMemory\b/);
+    expect(listing).not.toMatch(/Read the Room/);
+
+    expect(getFlow("framing-headlines").track).toBe("Framing");
+    expect(getFlow("echo-chamber").track).toBe("Echo");
+    expect(getFlow("memory-recall").track).toBe("Memory");
+    expect(getFlow("read-the-room").track).toBe("Read the Room");
 
     expect(getFlow("experiment-stub").listed).toBe(false);
     expect(getFlow("experiment-dummy-b").listed).toBe(false);
@@ -644,7 +660,8 @@ describe("getStepChrome", () => {
     expect(chrome.stepTypes.STOP.title).toBe("Stop");
     expect(chrome.stepTypes.PRESERVE.title).toBe("Preserve evidence");
     expect(chrome.stepTypes.BRANCH.title).toBe("Choose a path");
-    expect(chrome.stepTypes.MEASURE.title).toBe("Measure");
+    expect(chrome.stepTypes.MEASURE.title.length).toBeGreaterThan(0);
+    expect(chrome.stepTypes.MEASURE.title.toLowerCase()).not.toBe("measure");
     expect(chrome.stepTypes.TEMPLATE.titleFallback).toBe("Message template");
     expect(chrome.stepTypes.TEMPLATE.nameLabel.length).toBeGreaterThan(0);
     expect(chrome.stepTypes.TEMPLATE.personalize.length).toBeGreaterThan(0);
@@ -663,6 +680,9 @@ describe("getDashboardChrome", () => {
     expect(chrome.title.length).toBeGreaterThan(0);
     expect(chrome.intro.length).toBeGreaterThan(0);
     expect(chrome.profile.length).toBeGreaterThan(0);
+    expect(chrome.account.toLowerCase()).toMatch(/account/);
+    expect(chrome.account.toLowerCase()).toMatch(/saved automatically/);
+    expect(chrome.intro.toLowerCase()).toMatch(/saved automatically/);
   });
 });
 
@@ -686,6 +706,8 @@ describe("getLandingChrome", () => {
     expect(blob.toLowerCase()).toMatch(/practice/);
     expect(blob.toLowerCase()).toMatch(/deepfake|fake/);
     expect(blob.toLowerCase()).toMatch(/sign in/);
+    expect(blob.toLowerCase()).toMatch(/account/);
+    expect(blob.toLowerCase()).toMatch(/save as you go/);
   });
 
   it("loads two path entries for practice and help", () => {
@@ -696,6 +718,8 @@ describe("getLandingChrome", () => {
     ]);
     expect(chrome.entries[0]?.action).toBe("Start practicing");
     expect(chrome.entries[1]?.action).toBe("Get help now");
+    expect(chrome.entries[0]?.body.toLowerCase()).toMatch(/account/);
+    expect(chrome.entries[0]?.body.toLowerCase()).toMatch(/saved automatically/);
     expect(chrome.footer.note.toLowerCase()).toMatch(/sign in/);
   });
 });
@@ -720,3 +744,19 @@ describe("getReportChrome", () => {
     expect(blob).not.toMatch(/warning|danger|alert|error|fail|weakness/);
   });
 });
+
+describe("training persistence copy", () => {
+  it("does not claim training stays on-device until the user saves a profile", () => {
+    const blob = [
+      JSON.stringify(getLandingChrome()),
+      JSON.stringify(getDashboardChrome()),
+    ]
+      .join("\n")
+      .toLowerCase();
+    expect(blob).not.toMatch(/leaves the device/);
+    expect(blob).not.toMatch(/unless the user/);
+    expect(blob).not.toMatch(/save my results/);
+    expect(blob).not.toMatch(/choose to save a profile/);
+  });
+});
+

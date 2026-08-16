@@ -59,6 +59,10 @@ export async function openExperimentFromDashboard(
 
 export async function expectTrainDashboard(page: Page): Promise<void> {
   await expect(page.getByRole("heading", { name: "Train" })).toBeVisible();
+  await expect(page.getByText("Framing", { exact: true })).toHaveCount(0);
+  await expect(page.getByText("Echo", { exact: true })).toHaveCount(0);
+  await expect(page.getByText("Memory", { exact: true })).toHaveCount(0);
+  await expect(page.getByText("Read the Room", { exact: true })).toHaveCount(0);
 }
 
 export async function expectReflectionReport(page: Page): Promise<void> {
@@ -77,6 +81,7 @@ export async function clickContinue(page: Page): Promise<void> {
 }
 
 export async function completeLinearMeasure(page: Page): Promise<void> {
+  await expect(page.getByText("Measure", { exact: true })).toHaveCount(0);
   await expect(
     page.getByText(getStepChrome().stepTypes.MEASURE.title, { exact: true }),
   ).toBeVisible();
@@ -106,6 +111,7 @@ export async function completeFramingHeadlines(page: Page): Promise<void> {
 export async function completeEchoChamber(page: Page): Promise<void> {
   const flow = getFlow("echo-chamber");
   await expect(page.getByText(flow.steps.perspective_diversity?.prompt ?? "")).toBeVisible();
+  await expect(page.getByText("Measure", { exact: true })).toHaveCount(0);
 
   const continueButton = page.getByRole("button", {
     name: getStepChrome().actions.continue,
@@ -147,6 +153,7 @@ export async function completeReadTheRoom(page: Page): Promise<void> {
   await clickContinue(page);
 
   await pickBranchOption(page, "read-the-room", "first_reply", "verify");
+  await expect(page.getByText("Measure", { exact: true })).toHaveCount(0);
   await expect(page.getByText(flow.steps.who?.prompt ?? "")).toBeVisible();
   await pickBranchOption(page, "read-the-room", "who", "adult");
 

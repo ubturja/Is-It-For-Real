@@ -86,8 +86,10 @@ The decision lives in the page body, not only in the top nav: **Practice** goes 
 |  | Try experiments that   |  | Stop, save evidence,   |  |
 |  | put you inside the     |  | tell someone, send a   |  |
 |  | trick. Needs an        |  | message. No account.   |  |
-|  | account.               |  | Works offline after    |  |
-|  |                        |  | the first visit.       |  |
+|  | account; results save  |  | Works offline after    |  |
+|  | automatically once     |  | the first visit.       |  |
+|  | you're signed in.      |  |                        |  |
+|  |                        |  |                        |  |
 |  |  [ Practice → ]        |  |  [ Get help now → ]    |  |
 |  +------------------------+  +------------------------+  |
 +----------------------------------------------------------+

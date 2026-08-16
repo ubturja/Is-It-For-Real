@@ -17,11 +17,10 @@ import { messageTemplateRegistry } from "./loadTemplates";
 
 const DEFAULT_LOCALE = "en";
 
-/** Listing fields for the /train dashboard — never includes scoring spoilers. */
+/** Listing fields for the /train dashboard — display title + teaser, never the construct track. */
 export type ExperimentSummary = {
   flowId: string;
   title: string;
-  track: string;
   teaser: string;
 };
 
@@ -55,7 +54,8 @@ export function listFlows(filter?: {
 }
 
 /**
- * Experiment cards for /train: title, track, teaser only (no metric spoilers).
+ * Experiment cards for /train: user-facing `title` + teaser.
+ * Construct `track` stays on the flow for scoring / profile radar — do not list it here.
  */
 export function listExperiments(): ExperimentSummary[] {
   return listFlows({ type: "experiment" })
@@ -63,8 +63,6 @@ export function listExperiments(): ExperimentSummary[] {
     .map((flow) => ({
       flowId: flow.flowId,
       title: flow.title,
-      // Schema requires these on experiment flows.
-      track: flow.track as string,
       teaser: flow.teaser as string,
     }));
 }

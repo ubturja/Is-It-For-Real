@@ -1,3 +1,4 @@
+import { getStepChrome } from "@isitfr/content-config";
 import { StepTypeEnum } from "@isitfr/schemas";
 import { describe, expect, it } from "vitest";
 
@@ -21,6 +22,9 @@ describe("stepTypeLabel", () => {
     expect(stepTypeLabel("BRANCH")).toBe("Choose a path");
     expect(stepTypeLabel("TEMPLATE")).toBe("Message template");
     expect(stepTypeLabel("RESOURCES")).toBe("Resources");
-    expect(stepTypeLabel("MEASURE")).toBe("Measure");
+    expect(stepTypeLabel("MEASURE")).toBe(
+      getStepChrome().stepTypes.MEASURE.title,
+    );
+    expect(stepTypeLabel("MEASURE").toLowerCase()).not.toBe("measure");
   });
 });

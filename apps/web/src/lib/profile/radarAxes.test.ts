@@ -39,7 +39,7 @@ describe("radarAxesFromScores", () => {
   it("does not hardcode the four experiment metrics in the radar UI", () => {
     const radar = readFileSync(resolve(__dirname, "../../components/ProfileRadar.tsx"), "utf8");
     const page = readFileSync(
-      resolve(__dirname, "../../app/(train)/train/profile/page.tsx"),
+      resolve(__dirname, "../../app/(site)/(train)/train/profile/page.tsx"),
       "utf8",
     );
     const combined = radar + page;

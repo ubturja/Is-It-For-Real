@@ -8,7 +8,10 @@ describe("train dashboard page", () => {
     const src = readFileSync(resolve(__dirname, "page.tsx"), "utf8");
     expect(src).toMatch(/getDashboardChrome/);
     expect(src).not.toMatch(/Pick a scenario/);
+    expect(src).not.toMatch(/saved automatically/);
     expect(src).not.toMatch(/Your profile/);
     expect(src).not.toMatch(/>\s*Train\s*</);
+    expect(src).not.toMatch(/experiment\.track/);
+    expect(src).toMatch(/experiment\.title/);
   });
 });

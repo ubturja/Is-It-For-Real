@@ -10,7 +10,14 @@ export const StepChromeSchema = z.object({
     STOP: z.object({ title: z.string() }),
     PRESERVE: z.object({ title: z.string() }),
     BRANCH: z.object({ title: z.string() }),
-    MEASURE: z.object({ title: z.string() }),
+    MEASURE: z.object({
+      title: z
+        .string()
+        .min(1)
+        .refine((value) => value.trim().toLowerCase() !== "measure", {
+          message: 'MEASURE chrome must not be the word "Measure"',
+        }),
+    }),
     TEMPLATE: z.object({
       titleFallback: z.string(),
       nameLabel: z.string(),
@@ -70,12 +77,13 @@ export const ReportChromeSchema = z.object({
 
 export type ReportChrome = z.infer<typeof ReportChromeSchema>;
 
-/** Train dashboard chrome — listing copy, not per-experiment teasers. */
+/** Train dashboard chrome — listing copy and the /login account note. */
 export const DashboardChromeSchema = z.object({
   locale: z.string(),
   title: z.string().min(1),
   intro: z.string().min(1),
   profile: z.string().min(1),
+  account: z.string().min(1),
 });
 
 export type DashboardChrome = z.infer<typeof DashboardChromeSchema>;
