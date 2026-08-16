@@ -1,5 +1,6 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 
 import { StepRenderer } from "@/components/flow-steps";
@@ -34,9 +35,10 @@ function useCrisisSessionHydrated(): boolean {
 
 type HelpFlowMachineProps = {
   onStartOver: () => void;
+  onFinish: () => void;
 };
 
-function HelpFlowMachine({ onStartOver }: HelpFlowMachineProps) {
+function HelpFlowMachine({ onStartOver, onFinish }: HelpFlowMachineProps) {
   const stepId = useCrisisSession((s) => s.stepId);
   const answers = useCrisisSession((s) => s.answers);
   const startedAt = useCrisisSession((s) => s.startedAt);
@@ -60,12 +62,18 @@ function HelpFlowMachine({ onStartOver }: HelpFlowMachineProps) {
 
   const handleAdvance = useCallback(
     (value?: string | number) => {
+      // RESOURCES is compiled as a final state (no `next`), so NEXT is a
+      // silent no-op. Finish must clear the session and leave — not send NEXT.
+      if (step?.type === "RESOURCES") {
+        onFinish();
+        return;
+      }
       if (typeof value === "string" && currentStepId) {
         setAnswer(currentStepId, value);
       }
       onAdvance(value);
     },
-    [currentStepId, onAdvance, setAnswer],
+    [currentStepId, onAdvance, onFinish, setAnswer, step],
   );
 
   if (!step || !currentStepId) {
@@ -86,21 +94,36 @@ function HelpFlowMachine({ onStartOver }: HelpFlowMachineProps) {
 
 /**
  * Crisis Mode entry: shared useFlowMachine shell + IndexedDB resume/persist
- * (never to Supabase). Crisis-only UI (Start over) stays here, not in the hook.
+ * (never to Supabase). Crisis-only UI (Start over, Finish → home) stays here,
+ * not in the hook.
  */
 export function HelpFlow() {
   const hydrated = useCrisisSessionHydrated();
   const startOver = useCrisisSession((s) => s.startOver);
+  const router = useRouter();
   const [runId, setRunId] = useState(0);
+  const [left, setLeft] = useState(false);
 
   const handleStartOver = useCallback(() => {
     startOver();
     setRunId((id) => id + 1);
   }, [startOver]);
 
-  if (!hydrated) {
+  const handleFinish = useCallback(() => {
+    startOver();
+    setLeft(true);
+    router.push("/");
+  }, [startOver, router]);
+
+  if (!hydrated || left) {
     return null;
   }
 
-  return <HelpFlowMachine key={runId} onStartOver={handleStartOver} />;
+  return (
+    <HelpFlowMachine
+      key={runId}
+      onStartOver={handleStartOver}
+      onFinish={handleFinish}
+    />
+  );
 }
