@@ -17,6 +17,14 @@ function safeNextPath(next: string | null): string {
  */
 export async function GET(request: Request) {
   const url = new URL(request.url);
+  const errorCode = url.searchParams.get("error_code");
+  const error = url.searchParams.get("error");
+  if (errorCode === "otp_expired" || error === "access_denied") {
+    return NextResponse.redirect(
+      new URL("/login?error=otp_expired", url.origin),
+    );
+  }
+
   const code = url.searchParams.get("code");
   const nextPath = safeNextPath(url.searchParams.get("next"));
 

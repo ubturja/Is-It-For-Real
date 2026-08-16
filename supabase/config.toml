@@ -27,6 +27,8 @@ enabled = true
 
 [auth]
 enabled = true
+# Local CLI only. Hosted project Site URL must be https://isitfr.vercel.app —
+# expired recovery emails fall back there, not here.
 site_url = "http://localhost:3000"
 additional_redirect_urls = [
   "http://localhost:3000",

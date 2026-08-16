@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 
+import { AuthRedirectErrorCatcher } from "@/components/auth/AuthRedirectErrorCatcher";
 import { SiteHeader } from "@/components/SiteHeader";
 
 /**
@@ -9,6 +10,7 @@ import { SiteHeader } from "@/components/SiteHeader";
 export default function SiteLayout({ children }: { children: ReactNode }) {
   return (
     <>
+      <AuthRedirectErrorCatcher />
       <SiteHeader />
       {children}
     </>

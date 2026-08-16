@@ -1,3 +1,5 @@
+import { getAuthChrome } from "@isitfr/content-config";
+
 import { LoginForm } from "@/components/auth/LoginForm";
 
 type LoginPageProps = {
@@ -16,10 +18,13 @@ function safeNextPath(next: string | undefined): string {
 
 export default function LoginPage({ searchParams }: LoginPageProps) {
   const nextPath = safeNextPath(searchParams.next);
+  const chrome = getAuthChrome();
   const initialError =
-    searchParams.error === "auth"
-      ? "Authentication failed. Try again."
-      : null;
+    searchParams.error === "otp_expired"
+      ? chrome.reset.missingSession
+      : searchParams.error === "auth"
+        ? "Authentication failed. Try again."
+        : null;
 
   return (
     <main className="mx-auto flex max-w-5xl justify-center px-4 py-12">

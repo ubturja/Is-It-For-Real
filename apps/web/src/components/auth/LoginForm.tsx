@@ -14,7 +14,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
-import { RESET_PASSWORD_PATH } from "@/lib/auth/paths";
+import { authCallbackUrl, RESET_PASSWORD_PATH } from "@/lib/auth/paths";
 import { createClient } from "@/lib/supabase/client";
 import { ensureProfile } from "@/lib/supabase/profile";
 
@@ -57,7 +57,10 @@ export function LoginForm({ nextPath, initialError }: LoginFormProps) {
         const { error: resetError } = await supabase.auth.resetPasswordForEmail(
           email,
           {
-            redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(RESET_PASSWORD_PATH)}`,
+            redirectTo: authCallbackUrl(
+              window.location.origin,
+              RESET_PASSWORD_PATH,
+            ),
           },
         );
         if (resetError) {
@@ -72,7 +75,7 @@ export function LoginForm({ nextPath, initialError }: LoginFormProps) {
           email,
           password,
           options: {
-            emailRedirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(nextPath)}`,
+            emailRedirectTo: authCallbackUrl(window.location.origin, nextPath),
           },
         });
         if (signUpError) {
@@ -117,7 +120,7 @@ export function LoginForm({ nextPath, initialError }: LoginFormProps) {
       const { error: oauthError } = await supabase.auth.signInWithOAuth({
         provider: "google",
         options: {
-          redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(nextPath)}`,
+          redirectTo: authCallbackUrl(window.location.origin, nextPath),
         },
       });
       if (oauthError) {
