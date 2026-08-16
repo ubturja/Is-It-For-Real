@@ -88,6 +88,30 @@ export const DashboardChromeSchema = z.object({
 
 export type DashboardChrome = z.infer<typeof DashboardChromeSchema>;
 
+/** Login / password-reset chrome — training path only, never Crisis Mode. */
+export const AuthChromeSchema = z.object({
+  locale: z.string(),
+  forgot: z.object({
+    link: z.string().min(1),
+    title: z.string().min(1),
+    description: z.string().min(1),
+    submit: z.string().min(1),
+    sent: z.string().min(1),
+    back: z.string().min(1),
+  }),
+  reset: z.object({
+    title: z.string().min(1),
+    description: z.string().min(1),
+    password: z.string().min(1),
+    confirm: z.string().min(1),
+    submit: z.string().min(1),
+    mismatch: z.string().min(1),
+    missingSession: z.string().min(1),
+  }),
+});
+
+export type AuthChrome = z.infer<typeof AuthChromeSchema>;
+
 /** Home landing chrome — hero, explainer, path entries, and footer. */
 export const LandingChromeSchema = z.object({
   locale: z.string(),
@@ -166,6 +190,14 @@ export function validateDashboardChrome(json: unknown): DashboardChrome {
   const result = DashboardChromeSchema.safeParse(json);
   if (!result.success) {
     throw new Error(`Invalid DashboardChrome:\n${formatZodIssues(result.error)}`);
+  }
+  return result.data;
+}
+
+export function validateAuthChrome(json: unknown): AuthChrome {
+  const result = AuthChromeSchema.safeParse(json);
+  if (!result.success) {
+    throw new Error(`Invalid AuthChrome:\n${formatZodIssues(result.error)}`);
   }
   return result.data;
 }
