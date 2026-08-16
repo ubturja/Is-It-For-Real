@@ -114,6 +114,53 @@ export async function completeTrustedAdultFlow(page: Page) {
 }
 
 /** Ensure zustand/idb-keyval has flushed the crisis session step id. */
+export async function waitForClearedCrisisSession(page: Page) {
+  await page.waitForFunction(
+    async () => {
+      return await new Promise<boolean>((resolve) => {
+        const open = indexedDB.open("keyval-store");
+        open.onerror = () => resolve(false);
+        open.onsuccess = () => {
+          const db = open.result;
+          if (!db.objectStoreNames.contains("keyval")) {
+            resolve(true);
+            return;
+          }
+          const tx = db.transaction("keyval", "readonly");
+          const store = tx.objectStore("keyval");
+          const req = store.get("isitfr-crisis-session");
+          req.onerror = () => resolve(false);
+          req.onsuccess = () => {
+            const raw = req.result;
+            if (raw == null) {
+              resolve(true);
+              return;
+            }
+            if (typeof raw !== "string") {
+              resolve(false);
+              return;
+            }
+            try {
+              const parsed = JSON.parse(raw) as {
+                state?: { stepId?: string | null };
+              };
+              resolve(
+                parsed.state?.stepId === null ||
+                  parsed.state?.stepId === undefined,
+              );
+            } catch {
+              resolve(false);
+            }
+          };
+        };
+      });
+    },
+    null,
+    { timeout: 10_000 },
+  );
+}
+
+/** Ensure zustand/idb-keyval has flushed the crisis session step id. */
 export async function waitForPersistedStep(page: Page, stepId: string) {
   await page.waitForFunction(
     async (expectedStepId) => {

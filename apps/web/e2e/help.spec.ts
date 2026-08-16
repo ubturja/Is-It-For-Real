@@ -11,6 +11,7 @@ import {
   expectStopStep,
   clickContinue,
   goToTrustedAdultTemplate,
+  waitForClearedCrisisSession,
   waitForPersistedStep,
   waitForServiceWorkerControl,
 } from "./helpers/crisis";
@@ -169,6 +170,32 @@ test.describe("Crisis Mode /help", () => {
       expect(body).not.toMatch(/"name"/);
     }
     await expect(page.getByText("[classmate's name]")).toHaveCount(0);
+  });
+
+  test("Finish clears the session and returns to the homepage", async ({
+    page,
+  }) => {
+    await page.goto("/help");
+    await completeTrustedAdultFlow(page);
+    await waitForPersistedStep(page, "resources");
+
+    await page
+      .getByRole("button", { name: getStepChrome().actions.finish })
+      .click();
+
+    await expect(page).toHaveURL((url) => url.pathname === "/");
+    await expect(
+      page
+        .getByRole("region", { name: "Choose a path" })
+        .getByRole("link", { name: "Get help now" }),
+    ).toBeVisible();
+    await waitForClearedCrisisSession(page);
+
+    await page.goto("/help");
+    await expectStopStep(page);
+    await expect(
+      page.getByRole("heading", { name: /You're not alone/i }),
+    ).toHaveCount(0);
   });
 
   test("reload after steps 1–2 resumes at branch (step 3)", async ({
