@@ -179,6 +179,7 @@ describe("validateAuthChrome", () => {
     expect(() =>
       validateAuthChrome({
         locale: "en",
+        signOut: "Log out",
         forgot: {
           link: "Forgot password?",
           title: "Reset password",

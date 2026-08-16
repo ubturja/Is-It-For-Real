@@ -689,6 +689,7 @@ describe("getDashboardChrome", () => {
 describe("getAuthChrome", () => {
   it("loads forgot-password copy without claiming a reset was sent for a missing account", () => {
     const chrome = getAuthChrome();
+    expect(chrome.signOut.length).toBeGreaterThan(0);
     expect(chrome.forgot.link.length).toBeGreaterThan(0);
     expect(chrome.forgot.sent.toLowerCase()).toMatch(/if an account exists/);
     expect(chrome.reset.missingSession.toLowerCase()).toMatch(/expired|invalid/);

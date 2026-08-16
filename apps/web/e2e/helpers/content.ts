@@ -45,6 +45,7 @@ export type ProfileChromeFile = {
 };
 
 export type AuthChromeFile = {
+  signOut: string;
   forgot: {
     link: string;
     title: string;

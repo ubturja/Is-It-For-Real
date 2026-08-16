@@ -140,4 +140,31 @@ test.describe("Auth boundary", () => {
       page.getByRole("link", { name: chrome.forgot.back }),
     ).toBeVisible();
   });
+
+  test("log out clears the session so /train requires sign-in again", async ({
+    page,
+  }) => {
+    const { email, password } = requireE2EAccount();
+    const chrome = getAuthChrome();
+
+    await page.goto("/login");
+    await page.getByLabel("Email").fill(email);
+    await page.getByLabel("Password").fill(password);
+    await page.getByRole("button", { name: "Sign in" }).click();
+    await expect(page).toHaveURL(/\/train/);
+
+    await page
+      .getByRole("navigation", { name: "Primary" })
+      .getByRole("button", { name: chrome.signOut, exact: true })
+      .click();
+    await expect(page).toHaveURL(/\/login/);
+    await expect(
+      page.getByRole("heading", { name: "Sign in" }),
+    ).toBeVisible();
+
+    await page.goto("/train");
+    const url = new URL(page.url());
+    expect(url.pathname).toBe("/login");
+    expect(url.searchParams.get(LOGIN_NEXT_PARAM)).toBe("/train");
+  });
 });

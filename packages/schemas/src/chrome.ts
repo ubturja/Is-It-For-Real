@@ -91,6 +91,7 @@ export type DashboardChrome = z.infer<typeof DashboardChromeSchema>;
 /** Login / password-reset chrome — training path only, never Crisis Mode. */
 export const AuthChromeSchema = z.object({
   locale: z.string(),
+  signOut: z.string().min(1),
   forgot: z.object({
     link: z.string().min(1),
     title: z.string().min(1),

@@ -40,6 +40,8 @@ describe("crisis vs training chrome", () => {
     expect(header).toMatch(/href="\/train"/);
     expect(header).toMatch(/href="\/train\/profile"/);
     expect(header).toMatch(/href="\/help"/);
+    expect(header).toMatch(/getAuthChrome/);
+    expect(header).toMatch(/signOut/);
   });
 
   it("middleware still only matches /train — chrome is not an auth concern", () => {
